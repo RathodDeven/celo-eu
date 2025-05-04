@@ -24,7 +24,7 @@ export default function BlogPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-center mb-6">📝 Celo Europe Blog</h1>
+      <h1 className="text-3xl font-bold text-center mb-6">Celo Europe Blog</h1>
       <p className="text-center text-gray-600 mb-10">
         A collaborative space for sharing stories, insights, and developments across the Celo EU community.
       </p>

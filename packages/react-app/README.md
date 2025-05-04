@@ -1,66 +1,31 @@
-# React Framework + NextJS | Celo Composer
+# 🌍 Celo Europe Web App
 
-Celo Composer support React boilerplate template with TailwindCSS. This is a starter kit with no additional boilerplate code. It's a perfect starter kit to get your project started on Celo blockchain.
+Welcome to the official Celo Europe front-end application — a Next.js-based dApp enabling users to connect their wallets, learn about Celo, and participate in the Nexus Program.
 
-## Setup & Installation
+## 🚀 Features
 
+- 🔐 Connect your Celo-compatible wallet (e.g., MetaMask, Valora)
+- 🪪 Nexus Pass section for verifiable Celo Europe membership
+- 📚 Educational guide to help onboard users to the Celo ecosystem
+- 📝 Blog (collaborative writing coming soon)
 
-### Set environment variables
+## 🛠️ Tech Stack
 
-Create a copy of `.env.example` and rename it to `.env`.
+- **Next.js** (App Router)
+- **TypeScript**
+- **Tailwind CSS**
+- **Wagmi & Viem** for wallet connectivity
+- **RainbowKit** for wallet UI
+- **CELO** as blockchain (Alfajores/Testnet & Mainnet)
 
-#### Add Wallet Connect ID
-
-Create a WalletConnect Cloud Project ID from [WalletConnect Cloud](https://cloud.walletconnect.com/)
-
-Provide the WalletConnect Cloud Project ID in your `.env` file to use WalletConnect in your project. As shown in the `.env.example` file.
-
-```typescript
-NEXT_PUBLIC_WC_PROJECT_ID=YOUR_EXAMPLE_PROJECT_ID;
-```
-
-### Install dependencies
-
-Install all the required dependencies to run the dApp.
-
-Using **yarn**
+## 📦 Setup Instructions
 
 ```bash
-yarn
-```
+# Install dependencies
+yarn install
 
-or using **npm**
-
-```bash
-npm i
-```
-
-> React + Tailwind CSS Template does not have any dependency on hardhat.
-> This starterkit does not include connection of Hardhat/Truffle with ReactJS. It's up to the user to integrate smart contract with ReactJS. This gives user more flexibility over the dApp.
-
-- To start the dApp, run the following command.
-
-```bash
+# Run the local dev server
 yarn dev
 ```
 
-or using **npm**
-
-```bash
-npm run dev
-```
-
-## Dependencies
-
-### Default
-
-- [Next.js](https://nextjs.org/) app framework
-- [TailwindCSS](https://tailwindcss.com/) for UI
-
-## Architecture
-
-- `/pages` includes the main application components (specifically `layout.tsx` and `page.tsx`)
-  - `layout.tsx` includes configuration
-  - `page.tsx` is the main page of the application
-- `/components` includes components that are rendered in `page.tsx`
-- `/public` includes static files
+Created with 💛 by AXMC for Celo Europe using Celo Composer
