@@ -5,64 +5,68 @@ export default function Guide() {
     <div className="max-w-3xl mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold text-center mb-6">Getting Started with Celo</h1>
 
-      <section className="mb-8">
-        <h2 className="text-2xl font-semibold mb-2">1. What is a Wallet?</h2>
-        <p className="text-gray-700 mb-4">
-          A crypto wallet is your digital identity and access point to the blockchain. It allows you to send and receive crypto assets, sign messages, and interact with decentralized applications (dApps). Popular wallet providers include MetaMask, Valora, and Rainbow.
-        </p>
-        <p className="text-gray-700">
-          We recommend <strong>Valora</strong> for mobile-first experiences and <strong>MetaMask</strong> for desktop users. Your wallet is yours alone — make sure to store your recovery phrase safely and never share it with anyone.
-        </p>
-      </section>
+      {/* Section 1: Celo for Starters */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-bold text-yellow-500 mb-4">📗 Celo for Starters</h2>
 
-      <section className="mb-8">
-        <h2 className="text-2xl font-semibold mb-2">2. How to Add the Celo Network to Your Wallet</h2>
-        <p className="text-gray-700 mb-4">
-          If you're using MetaMask or a compatible wallet, you can manually add the Celo network or use the official helper:
-        </p>
-        <ul className="list-disc list-inside text-gray-700 mb-4">
-          <li>Open MetaMask and click on your current network at the top.</li>
-          <li>Select "Add network manually" or "Custom RPC".</li>
-        </ul>
-        <p className="text-gray-700 font-medium mb-2">Celo Mainnet Settings:</p>
-        <div className="bg-gray-100 p-4 rounded-md text-sm font-mono">
-          <p><strong>Network Name:</strong> Celo Mainnet</p>
-          <p><strong>New RPC URL:</strong> https://forno.celo.org</p>
-          <p><strong>Chain ID:</strong> 42220</p>
-          <p><strong>Currency Symbol:</strong> CELO</p>
-          <p><strong>Block Explorer:</strong> https://explorer.celo.org</p>
+        <div className="mb-8">
+          <h3 className="text-xl font-semibold mb-2">1. What is a Wallet?</h3>
+          <p className="text-gray-700 mb-4">
+            A crypto wallet is your digital identity and access point to the blockchain. It allows you to send and receive crypto assets, sign messages, and interact with decentralized applications (dApps). Popular wallet providers include MetaMask, Valora, and Rainbow.
+          </p>
+          <p className="text-gray-700">
+            We recommend <strong>Valora</strong> for mobile-first experiences and <strong>MetaMask</strong> for desktop users. Your wallet is yours alone — make sure to store your recovery phrase safely and never share it with anyone.
+          </p>
         </div>
-        <p className="mt-4 text-gray-700">
-          You can also add the Alfajores Testnet (great for testing before transacting real assets):
-        </p>
-        <div className="bg-gray-100 p-4 rounded-md text-sm font-mono">
-          <p><strong>Network Name:</strong> Celo Alfajores Testnet</p>
-          <p><strong>New RPC URL:</strong> https://alfajores-forno.celo-testnet.org</p>
-          <p><strong>Chain ID:</strong> 44787</p>
-          <p><strong>Currency Symbol:</strong> CELO</p>
-          <p><strong>Block Explorer:</strong> https://alfajores.celoscan.io</p>
+
+        <div className="mb-8">
+          <h3 className="text-xl font-semibold mb-2">2. How to Add the Celo Network to Your Wallet</h3>
+          <p className="text-gray-700 mb-4">
+            If you're using MetaMask or a compatible wallet, you can manually add the Celo network or use the official helper:
+          </p>
+          <ul className="list-disc list-inside text-gray-700 mb-4">
+            <li>Open MetaMask and click on your current network at the top.</li>
+            <li>Select "Add network manually" or "Custom RPC".</li>
+          </ul>
+          <p className="text-gray-700 font-medium mb-2">Celo Mainnet Settings:</p>
+          <div className="bg-gray-100 p-4 rounded-md text-sm font-mono">
+            <p><strong>Network Name:</strong> Celo Mainnet</p>
+            <p><strong>New RPC URL:</strong> https://forno.celo.org</p>
+            <p><strong>Chain ID:</strong> 42220</p>
+            <p><strong>Currency Symbol:</strong> CELO</p>
+            <p><strong>Block Explorer:</strong> https://explorer.celo.org</p>
+          </div>
+          <p className="mt-4 text-gray-700">
+            You can also add the Alfajores Testnet (great for testing before transacting real assets):
+          </p>
+          <div className="bg-gray-100 p-4 rounded-md text-sm font-mono">
+            <p><strong>Network Name:</strong> Celo Alfajores Testnet</p>
+            <p><strong>New RPC URL:</strong> https://alfajores-forno.celo-testnet.org</p>
+            <p><strong>Chain ID:</strong> 44787</p>
+            <p><strong>Currency Symbol:</strong> CELO</p>
+            <p><strong>Block Explorer:</strong> https://alfajores.celoscan.io</p>
+          </div>
+        </div>
+
+        <div className="mb-10">
+          <h3 className="text-xl font-semibold mb-2">3. Need Test Tokens?</h3>
+          <p className="text-gray-700 mb-2">
+            If you're working on Alfajores, you’ll need test CELO or cUSD to interact with dApps. Use the official faucet:
+          </p>
+          <a
+            href="https://faucet.celo.org/alfajores"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300"
+          >
+            🔗 Visit Alfajores Faucet
+          </a>
         </div>
       </section>
 
-      <section className="mb-8">
-        <h2 className="text-2xl font-semibold mb-2">3. Need Test Tokens?</h2>
-        <p className="text-gray-700 mb-2">
-          If you're working on Alfajores, you’ll need test CELO or cUSD to interact with dApps. Use the official faucet:
-        </p>
-        <a
-          href="https://faucet.celo.org/alfajores"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-block bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300"
-        >
-          🔗 Visit Alfajores Faucet
-        </a>
-      </section>
-
-      <hr className="my-10 border-gray-300" />
-
+      {/* Section 2: Nexus Program */}
       <section>
-        <h2 className="text-2xl font-semibold mb-2">4. Nexus Program</h2>
+        <h2 className="text-2xl font-bold text-yellow-500 mb-4">💠 Nexus Program</h2>
         <p className="text-gray-700 mb-4">
           The Nexus Program is Celo Europe's gateway to verified participation. Through this program, users can collect NFTs that act as credentials and open doors to new opportunities in the ecosystem.
         </p>
