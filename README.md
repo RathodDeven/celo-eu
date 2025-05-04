@@ -1,4 +1,4 @@
-# 🌍 Celo Europe Web App
+# Celo Europe Web App
 
 Welcome to the official Celo Europe front-end application — a Next.js-based dApp enabling users to connect their wallets, learn about Celo, and participate in the Nexus Program.
 
