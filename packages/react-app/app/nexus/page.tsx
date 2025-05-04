@@ -16,7 +16,7 @@ export default function NexusProgram() {
     if (!address) {
       alert("Please connect your wallet first. You can learn how in the Guide.");
     } else {
-      mintMinipayNFT(); // Placeholder for the actual mint logic
+      mintMinipayNFT(); // Placeholder for future ABI-connected logic
     }
   };
 
@@ -66,7 +66,10 @@ export default function NexusProgram() {
         </button>
         {!address && (
           <p className="mt-4 text-sm text-gray-600">
-            Don&apos;t have a wallet? <Link href="/guide" className="underline text-blue-600 hover:text-blue-800">Read the guide</Link>
+            Don&apos;t have a wallet?{" "}
+            <Link href="/guide" className="underline text-blue-600 hover:text-blue-800">
+              Read the guide
+            </Link>
           </p>
         )}
       </section>
