@@ -26,5 +26,11 @@
   "keywords": [
     "celo-composer",
     "celo"
-  ]
+  ],
+  "packageManager": "yarn@4.9.1",
+  "dependencies": {
+    "@tanstack/query-core": "^4.29.14",
+    "lit": "^3.3.0",
+    "lit-html": "^3.3.0"
+  }
 }
