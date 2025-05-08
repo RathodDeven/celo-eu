@@ -14,7 +14,7 @@ import {
 
 export default function NexusProgram() {
   const { address, getUserAddress } = useWeb3();
-  const [hasNFT, setHasNFT] = useState<boolean>(false);
+  const [hasNFT, setHasNFT] = useState<boolean | null>(null);
   const [minting, setMinting] = useState(false);
   const [mintError, setMintError] = useState<string | null>(null);
   const router = useRouter();
@@ -123,11 +123,13 @@ export default function NexusProgram() {
       </section>
 
       <section>
-        {address ? (
+        {hasNFT === null ? (
+          <p className="text-sm text-gray-500">Checking membership status...</p>
+        ) : address ? (
           hasNFT ? (
             <Link href="/dashboard">
               <button className="inline-block bg-yellow-400 text-black px-6 py-3 rounded-md text-sm font-semibold hover:bg-yellow-300">
-                Go to Your Dashboard
+                🧭 Go to Your Dashboard
               </button>
             </Link>
           ) : (
@@ -140,17 +142,7 @@ export default function NexusProgram() {
             </button>
           )
         ) : (
-          <>
-            <button
-              onClick={() => alert("Please connect your wallet first. You can learn how in the Guide.")}
-              className="inline-block bg-yellow-400 text-black px-6 py-3 rounded-md text-sm font-semibold hover:bg-yellow-300"
-            >
-              🚀 Mint your Nexus Pass
-            </button>
-            <p className="mt-4 text-sm text-gray-600">
-              Don&apos;t have a wallet? <Link href="/guide" className="underline text-blue-600 hover:text-blue-800">Read the guide</Link>
-            </p>
-          </>
+          <p className="text-red-600">Please connect your wallet first.</p>
         )}
         {mintError && <p className="text-red-600 mt-4 text-sm">{mintError}</p>}
       </section>
