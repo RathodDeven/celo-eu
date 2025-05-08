@@ -6,10 +6,10 @@
   "author": "axmc",
   "license": "MIT",
   "scripts": {
-    "react-app:dev": "yarn workspace @celo-composer-minipay-template/react-app dev",
-    "react-app:build": "yarn workspace @celo-composer-minipay-template/react-app build",
-    "react-app:start": "yarn workspace @celo-composer-minipay-template/react-app start",
-    "react-app:lint": "yarn workspace @celo-composer-minipay-template/react-app lint"
+    "react-app:dev": "yarn workspace react-app dev",
+    "react-app:build": "yarn workspace react-app build",
+    "react-app:start": "yarn workspace react-app start",
+    "react-app:lint": "yarn workspace react-app lint"
   },
   "repository": {
     "type": "git",
@@ -20,8 +20,7 @@
   },
   "homepage": "https://github.com/celo-org/celo-composer/blob/main/README.md",
   "workspaces": [
-    "packages/*",
-    "hardhat/*"
+    "packages/*"
   ],
   "keywords": [
     "celo-composer",

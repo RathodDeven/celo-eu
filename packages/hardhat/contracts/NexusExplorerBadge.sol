@@ -15,11 +15,17 @@ contract NexusExplorerBadge is
     ERC721Burnable
 {
     uint256 private _nextTokenId;
+    string private _baseBadgeURI;
+    mapping(address => bool) public hasMinted;
+
+    event ExplorerBadgeMinted(address indexed recipient, uint256 indexed tokenId);
 
     constructor(address initialOwner)
         ERC721("Nexus Explorer Badge", "NXEXP")
         Ownable(initialOwner)
-    {}
+    {
+        _baseBadgeURI = "ipfs://bafkreid2wtv65ife2zk2wic4exfn5whxk4gcy4ly4ybfvxuywjtvmips2e";
+    }
 
     function pause() public onlyOwner {
         _pause();
@@ -29,15 +35,44 @@ contract NexusExplorerBadge is
         _unpause();
     }
 
-    /// @notice Mint a badge to the recipient with the Nexus Explorer metadata
-    /// @param to Recipient address
-    function mintExplorerBadge(address to) public onlyOwner {
-        uint256 tokenId = _nextTokenId++;
-        _safeMint(to, tokenId);
-        _setTokenURI(tokenId, "ipfs://bafkreid2wtv65ife2zk2wic4exfn5whxk4gcy4ly4ybfvxuywjtvmips2e");
+    /// @notice Mint a badge to the recipient with predefined metadata
+    function mintExplorerBadge() public {
+    require(!hasMinted[msg.sender], "Already minted");
+    uint256 tokenId = _nextTokenId++;
+    _safeMint(msg.sender, tokenId);
+    _setTokenURI(tokenId, _baseBadgeURI);
+    hasMinted[msg.sender] = true;
+    emit ExplorerBadgeMinted(msg.sender, tokenId);
     }
 
-    // Required Solidity overrides
+    /// @notice Return all token IDs owned by an address
+    function getNFTsByAddress(address owner) public view returns (uint256[] memory) {
+        uint256 balance = balanceOf(owner);
+        uint256[] memory result = new uint256[](balance);
+        uint256 count = 0;
+        uint256 total = _nextTokenId;
+
+        for (uint256 i = 0; i < total; i++) {
+            try this.ownerOf(i) returns (address tokenOwner) {
+                if (tokenOwner == owner) {
+                    result[count] = i;
+                    count++;
+                    if (count == balance) break;
+                }
+            } catch {
+                // Token does not exist or was burned — skip
+            }
+        }
+
+        return result;
+    }
+
+    /// Optional: allow the owner to update the base URI
+    function updateBaseBadgeURI(string memory newUri) external onlyOwner {
+        _baseBadgeURI = newUri;
+    }
+
+    // ───── Required Overrides ─────
 
     function _update(
         address to,
@@ -57,27 +92,5 @@ contract NexusExplorerBadge is
         bytes4 interfaceId
     ) public view override(ERC721, ERC721URIStorage) returns (bool) {
         return super.supportsInterface(interfaceId);
-    }
-
-    function getNFTsByAddress(address owner) public view returns (uint256[] memory) {
-        uint256 totalNFTs = _nextTokenId;
-        uint256[] memory ownedTokenIds = new uint256[](totalNFTs);
-        uint256 currentIndex = 0;
-
-        for (uint256 i = 0; i < totalNFTs; i++) {
-            try ERC721(address(this)).ownerOf(i) returns (address tokenOwner) {
-                if (tokenOwner == owner) {
-                    ownedTokenIds[currentIndex++] = i;
-                }
-            } catch {
-                break;
-            }
-        }
-
-        assembly {
-            mstore(ownedTokenIds, currentIndex)
-        }
-
-        return ownedTokenIds;
     }
 }
