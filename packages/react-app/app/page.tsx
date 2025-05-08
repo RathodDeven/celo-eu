@@ -61,6 +61,11 @@ export default function Home() {
       }
     };
     checkOwnership();
+
+    if (address) {
+      const alreadySubmitted = localStorage.getItem(`celo-eu-form-${address}`);
+      if (alreadySubmitted) setEmailSent(true);
+    }
   }, [address, publicClient]);
 
   const handleMint = useCallback(async () => {
@@ -106,6 +111,7 @@ export default function Home() {
         formData,
         process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!
       );
+      localStorage.setItem(`celo-eu-form-${address}`, "true");
       setEmailSent(true);
     } catch (err: any) {
       console.error("❌ Email failed:", err?.text || err?.message || err);
