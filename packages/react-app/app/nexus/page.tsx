@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { createPublicClient, http } from "viem";
+import { createPublicClient, createWalletClient, custom, http } from "viem";
 import { celoAlfajores } from "viem/chains";
 import {
   nexusExplorerAbi,
@@ -15,6 +15,9 @@ import {
 export default function NexusProgram() {
   const { address, getUserAddress } = useWeb3();
   const [hasNFT, setHasNFT] = useState<boolean>(false);
+  const [minting, setMinting] = useState(false);
+  const [mintError, setMintError] = useState<string | null>(null);
+  const router = useRouter();
 
   const formatAddress = (addr: string) =>
     addr.toLowerCase().startsWith("0x") ? (addr as `0x${string}`) : (`0x${addr}` as `0x${string}`);
@@ -50,6 +53,38 @@ export default function NexusProgram() {
     checkOwnership();
   }, [address, publicClient]);
 
+  const handleMint = useCallback(async () => {
+    setMintError(null);
+    if (!address || typeof window === "undefined" || !window.ethereum) {
+      setMintError("Wallet not found or not connected.");
+      return;
+    }
+
+    const provider =
+      (window.ethereum.providers?.find((p: any) => p.isMetaMask) ?? window.ethereum) as any;
+
+    const walletClient = createWalletClient({
+      chain: celoAlfajores,
+      transport: custom(provider),
+    });
+
+    try {
+      setMinting(true);
+      await walletClient.writeContract({
+        address: nexusExplorerAddress,
+        abi: nexusExplorerAbi,
+        functionName: "mintExplorerBadge",
+        account: formatAddress(address),
+      });
+      setHasNFT(true);
+    } catch (err) {
+      console.error("❌ Minting failed:", err);
+      setMintError("Minting failed. Please check your wallet and try again.");
+    } finally {
+      setMinting(false);
+    }
+  }, [address]);
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-10">
       <h1 className="text-4xl font-bold text-center mb-6">The Nexus Program</h1>
@@ -81,7 +116,7 @@ export default function NexusProgram() {
       </div>
 
       <section className="mb-10">
-        <h2 className="text-2xl font-semibold mb-3">🎯 What&apos;s Next?</h2>
+        <h2 className="text-2xl font-semibold mb-3">What&apos;s Next?</h2>
         <p className="text-gray-700">
           More membership levels will be introduced soon, each with specific roles and responsibilities in shaping the Celo Europe ecosystem. By participating in missions and events, your pass will evolve — unlocking new powers and access along the way.
         </p>
@@ -89,11 +124,21 @@ export default function NexusProgram() {
 
       <section>
         {address ? (
-          <Link href="/dashboard">
-            <button className="inline-block bg-yellow-400 text-black px-6 py-3 rounded-md text-sm font-semibold hover:bg-yellow-300">
-              🧭 Go to Your Dashboard
+          hasNFT ? (
+            <Link href="/dashboard">
+              <button className="inline-block bg-yellow-400 text-black px-6 py-3 rounded-md text-sm font-semibold hover:bg-yellow-300">
+                Go to Your Dashboard
+              </button>
+            </Link>
+          ) : (
+            <button
+              onClick={handleMint}
+              className="inline-block bg-yellow-400 text-black px-6 py-3 rounded-md text-sm font-semibold hover:bg-yellow-300 disabled:opacity-50"
+              disabled={minting}
+            >
+              {minting ? "Minting..." : "Mint your Nexus Pass"}
             </button>
-          </Link>
+          )
         ) : (
           <>
             <button
@@ -107,6 +152,7 @@ export default function NexusProgram() {
             </p>
           </>
         )}
+        {mintError && <p className="text-red-600 mt-4 text-sm">{mintError}</p>}
       </section>
     </div>
   );
