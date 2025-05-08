@@ -22,6 +22,7 @@ export default function Home() {
   const [emailSent, setEmailSent] = useState(false);
   const [formData, setFormData] = useState({ name: "", username: "", email: "" });
   const [sendingEmail, setSendingEmail] = useState(false);
+  const [checkingConnection, setCheckingConnection] = useState(true);
   const router = useRouter();
 
   const formatAddress = (addr: string) =>
@@ -37,7 +38,11 @@ export default function Home() {
   );
 
   useEffect(() => {
-    getUserAddress();
+    const init = async () => {
+      await getUserAddress();
+      setCheckingConnection(false);
+    };
+    init();
   }, [getUserAddress]);
 
   useEffect(() => {
@@ -109,6 +114,10 @@ export default function Home() {
       setSendingEmail(false);
     }
   };
+
+  if (checkingConnection) {
+    return <div className="text-center py-20">🔄 Checking wallet connection...</div>;
+  }
 
   return (
     <div className="flex flex-col justify-center items-center px-4 py-8 max-w-4xl mx-auto">
