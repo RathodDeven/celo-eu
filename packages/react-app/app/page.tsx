@@ -4,6 +4,7 @@ import { useWeb3 } from "@/contexts/useWeb3";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { createPublicClient, createWalletClient, custom, http } from "viem";
 import { celoAlfajores } from "viem/chains";
 import {
@@ -19,11 +20,9 @@ export default function Home() {
   const [hasNFT, setHasNFT] = useState<boolean>(false);
   const [mintError, setMintError] = useState<string | null>(null);
   const [emailSent, setEmailSent] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    username: "",
-    email: "",
-  });
+  const [formData, setFormData] = useState({ name: "", username: "", email: "" });
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const router = useRouter();
 
   const formatAddress = (addr: string) =>
     addr.toLowerCase().startsWith("0x") ? (addr as `0x${string}`) : (`0x${addr}` as `0x${string}`);
@@ -45,12 +44,12 @@ export default function Home() {
     const checkOwnership = async () => {
       if (!address) return;
       try {
-        const tokenIds: readonly bigint[] = await publicClient.readContract({
+        const tokenIds = await publicClient.readContract({
           address: nexusExplorerAddress,
           abi: nexusExplorerAbi,
           functionName: "getNFTsByAddress",
           args: [formatAddress(address)],
-        });
+        }) as bigint[];
         setHasNFT(tokenIds.length > 0);
       } catch (err) {
         console.error("❌ Error checking NFT ownership:", err);
@@ -67,8 +66,7 @@ export default function Home() {
     }
 
     const provider =
-      (window.ethereum.providers?.find((p: any) => p.isMetaMask) ??
-        window.ethereum) as any;
+      (window.ethereum.providers?.find((p: any) => p.isMetaMask) ?? window.ethereum) as any;
 
     const walletClient = createWalletClient({
       chain: celoAlfajores,
@@ -84,16 +82,18 @@ export default function Home() {
         account: formatAddress(address),
       });
       setTxHash(hash);
+      router.push("/success");
     } catch (err) {
       console.error("❌ Minting failed:", err);
       setMintError("Minting failed. Please check your wallet and try again.");
     } finally {
       setMinting(false);
     }
-  }, [address]);
+  }, [address, router]);
 
   const handleSendEmail = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSendingEmail(true);
     try {
       await emailjs.send(
         process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,
@@ -105,6 +105,8 @@ export default function Home() {
     } catch (err: any) {
       console.error("❌ Email failed:", err?.text || err?.message || err);
       setEmailSent(false);
+    } finally {
+      setSendingEmail(false);
     }
   };
 
@@ -120,9 +122,7 @@ export default function Home() {
       />
       <h1 className="text-3xl font-bold text-center mb-4">Welcome to Celo Europe</h1>
       <p className="text-center text-gray-600 max-w-xl mb-2">
-        Celo Europe is a regional initiative supporting builders, educators, and
-        ecosystem leaders to drive real-world adoption of regenerative technologies on
-        Celo.
+        Celo Europe is a regional initiative supporting builders, educators, and ecosystem leaders to drive real-world adoption of regenerative technologies on Celo.
       </p>
       <a
         href="https://app.charmverse.io/celo-eu-notebook-defiant-smartcontract-minnow/activities-celoeu-1919356630697271?viewId=e835c64b-5f4f-48c6-a911-337d8b42b07b"
@@ -144,9 +144,7 @@ export default function Home() {
           className="mx-auto mb-4"
         />
         <p className="text-center text-gray-600 max-w-xl mb-6">
-          The Nexus Pass is your verifiable membership credential — it gives you access
-          to exclusive events, governance participation, and funding rounds. Mint yours
-          and join the movement.
+          The Nexus Pass is your verifiable membership credential — it gives you access to exclusive events, governance participation, and funding rounds. Mint yours and join the movement.
         </p>
         <Link
           href="/nexus"
@@ -182,8 +180,12 @@ export default function Home() {
             className="border rounded px-4 py-2"
             required
           />
-          <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">
-            Send
+          <button
+            type="submit"
+            className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
+            disabled={sendingEmail}
+          >
+            {sendingEmail ? "Sending..." : "Send"}
           </button>
         </form>
       ) : (

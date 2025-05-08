@@ -8,7 +8,7 @@ const nextConfig = {
     return config;
   },
   images: {
-    domains: ['cdn-production-opera-website.operacdn.com'],
+    domains: ['crimson-peaceful-impala-136.mypinata.cloud'],
   },
 };
 
