@@ -1,24 +1,54 @@
 "use client";
 
+import { useWeb3 } from "@/contexts/useWeb3";
 import Image from "next/image";
 import Link from "next/link";
-import { useWeb3 } from "@/contexts/useWeb3";
-import { useEffect } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { createPublicClient, http } from "viem";
+import { celoAlfajores } from "viem/chains";
+import {
+  nexusExplorerAbi,
+  nexusExplorerAddress,
+} from "@/lib/abi/NexusExplorerBadge";
 
 export default function NexusProgram() {
-  const { address, getUserAddress, mintMinipayNFT } = useWeb3();
+  const { address, getUserAddress } = useWeb3();
+  const [hasNFT, setHasNFT] = useState<boolean>(false);
+
+  const formatAddress = (addr: string) =>
+    addr.toLowerCase().startsWith("0x") ? (addr as `0x${string}`) : (`0x${addr}` as `0x${string}`);
+
+  const publicClient = useMemo(
+    () =>
+      createPublicClient({
+        chain: celoAlfajores,
+        transport: http(),
+      }),
+    []
+  );
 
   useEffect(() => {
     getUserAddress();
   }, [getUserAddress]);
 
-  const handleMintClick = () => {
-    if (!address) {
-      alert("Please connect your wallet first. You can learn how in the Guide.");
-    } else {
-      mintMinipayNFT(); // Placeholder for future ABI-connected logic
-    }
-  };
+  useEffect(() => {
+    const checkOwnership = async () => {
+      if (!address) return;
+      try {
+        const tokenIds = await publicClient.readContract({
+          address: nexusExplorerAddress,
+          abi: nexusExplorerAbi,
+          functionName: "getNFTsByAddress",
+          args: [formatAddress(address)],
+        }) as bigint[];
+        setHasNFT(tokenIds.length > 0);
+      } catch (err) {
+        console.error("❌ Error checking NFT ownership:", err);
+      }
+    };
+    checkOwnership();
+  }, [address, publicClient]);
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-10">
@@ -58,19 +88,24 @@ export default function NexusProgram() {
       </section>
 
       <section>
-        <button
-          onClick={handleMintClick}
-          className="inline-block bg-yellow-400 text-black px-6 py-3 rounded-md text-sm font-semibold hover:bg-yellow-300"
-        >
-          🚀 Mint your Nexus Pass
-        </button>
-        {!address && (
-          <p className="mt-4 text-sm text-gray-600">
-            Don&apos;t have a wallet?{" "}
-            <Link href="/guide" className="underline text-blue-600 hover:text-blue-800">
-              Read the guide
-            </Link>
-          </p>
+        {address ? (
+          <Link href="/dashboard">
+            <button className="inline-block bg-yellow-400 text-black px-6 py-3 rounded-md text-sm font-semibold hover:bg-yellow-300">
+              🧭 Go to Your Dashboard
+            </button>
+          </Link>
+        ) : (
+          <>
+            <button
+              onClick={() => alert("Please connect your wallet first. You can learn how in the Guide.")}
+              className="inline-block bg-yellow-400 text-black px-6 py-3 rounded-md text-sm font-semibold hover:bg-yellow-300"
+            >
+              🚀 Mint your Nexus Pass
+            </button>
+            <p className="mt-4 text-sm text-gray-600">
+              Don&apos;t have a wallet? <Link href="/guide" className="underline text-blue-600 hover:text-blue-800">Read the guide</Link>
+            </p>
+          </>
         )}
       </section>
     </div>
