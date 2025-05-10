@@ -1,20 +1,26 @@
 "use client";
 
-import { useWeb3 } from "@/contexts/useWeb3";
-import Image from "next/image";
-import Link from "next/link";
-import { useEffect, useState, useCallback, useMemo } from "react";
-import { useRouter } from "next/navigation";
-import { createPublicClient, createWalletClient, custom, http } from "viem";
-import { celoAlfajores } from "viem/chains";
+import { useWeb3Modal } from '@web3modal/wagmi/react';
+import { useAccount, useConnect, useDisconnect, usePublicClient, useWalletClient } from 'wagmi';
+import { celoAlfajores } from 'wagmi/chains';
+import { http } from 'viem';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useEffect, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import emailjs from '@emailjs/browser';
 import {
   nexusExplorerAbi,
   nexusExplorerAddress,
-} from "@/lib/abi/NexusExplorerBadge";
-import emailjs from "@emailjs/browser";
+} from '@/lib/abi/NexusExplorerBadge';
 
 export default function ReferralPageAndrea() {
-  const { address, getUserAddress } = useWeb3();
+  const router = useRouter();
+  const { address, isConnected } = useAccount();
+  const { open } = useWeb3Modal();
+  const { data: walletClient } = useWalletClient();
+  const publicClient = usePublicClient({ chainId: celoAlfajores.id });
+
   const [minting, setMinting] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
   const [hasNFT, setHasNFT] = useState<boolean>(false);
@@ -22,23 +28,9 @@ export default function ReferralPageAndrea() {
   const [emailSent, setEmailSent] = useState(false);
   const [formData, setFormData] = useState({ name: "", username: "", email: "" });
   const [sendingEmail, setSendingEmail] = useState(false);
-  const router = useRouter();
 
   const formatAddress = (addr: string) =>
     addr.toLowerCase().startsWith("0x") ? (addr as `0x${string}`) : (`0x${addr}` as `0x${string}`);
-
-  const publicClient = useMemo(
-    () =>
-      createPublicClient({
-        chain: celoAlfajores,
-        transport: http(),
-      }),
-    []
-  );
-
-  useEffect(() => {
-    getUserAddress();
-  }, [getUserAddress]);
 
   useEffect(() => {
     const checkOwnership = async () => {
@@ -60,18 +52,10 @@ export default function ReferralPageAndrea() {
 
   const handleMint = useCallback(async () => {
     setMintError(null);
-    if (!address || typeof window === "undefined" || !window.ethereum) {
-      setMintError("Wallet not found or not connected.");
+    if (!walletClient || !address) {
+      setMintError("Wallet not connected.");
       return;
     }
-
-    const provider =
-      (window.ethereum.providers?.find((p: any) => p.isMetaMask) ?? window.ethereum) as any;
-
-    const walletClient = createWalletClient({
-      chain: celoAlfajores,
-      transport: custom(provider),
-    });
 
     try {
       setMinting(true);
@@ -89,7 +73,7 @@ export default function ReferralPageAndrea() {
     } finally {
       setMinting(false);
     }
-  }, [address, router]);
+  }, [walletClient, address, router]);
 
   const handleSendEmail = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,7 +104,25 @@ export default function ReferralPageAndrea() {
         className="rounded-full mx-auto mb-4 shadow-lg"
       />
       <h1 className="text-4xl font-extrabold mb-2">Andrea</h1>
-      <p className="text-gray-600 mb-6 text-lg">Co-Founder @ AXMC | Regenerative Infra Builder</p>
+      <p className="text-gray-600 mb-2 text-lg">Co-Founder @ AXMC | Regenerative Infra Builder</p>
+      <div className="flex gap-4 mb-4 text-sm">
+        <Link
+          href="https://www.linkedin.com/in/andrea-l%C3%B3pez-de-vicu%C3%B1a-de-jorge/"
+          className="text-blue-600 underline"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          LinkedIn
+        </Link>
+        <Link
+          href="https://t.me/celoeu"
+          className="text-blue-600 underline"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Telegram (Celo Europe)
+        </Link>
+      </div>
 
       {!emailSent ? (
         <form onSubmit={handleSendEmail} className="flex flex-col gap-4 mt-6 w-full max-w-md">
@@ -158,8 +160,13 @@ export default function ReferralPageAndrea() {
         </form>
       ) : (
         <div className="mt-8 text-center">
-          {!address ? (
-            <p className="text-red-600 font-semibold mt-6">Please connect your wallet to mint.</p>
+          {!isConnected ? (
+            <button
+              onClick={() => open()}
+              className="rounded bg-blue-600 text-white font-semibold px-6 py-2 hover:bg-blue-700"
+            >
+              Connect Wallet
+            </button>
           ) : hasNFT ? (
             <p className="text-green-600 font-semibold mt-6">You already own the Explorer Badge</p>
           ) : (
