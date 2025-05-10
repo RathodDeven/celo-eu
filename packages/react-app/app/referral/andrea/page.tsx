@@ -33,7 +33,7 @@ export default function AndreaReferralPage() {
             rel="noopener noreferrer"
             className="text-blue-600 underline"
           >
-            Andrea's LinkedIn
+            Andrea
           </a>
           <a
             href="https://t.me/celoeu"
