@@ -1,10 +1,12 @@
+import React from "react";
+
 type Props = {
   className?: string;
 };
 
 const navigation = [
   {
-    name: "Twitter",
+    name: "X",
     href: "https://x.com/CeloEurope",
     icon: (props: Props) => (
       <svg fill="currentColor" viewBox="0 0 24 24" {...props}>
@@ -45,10 +47,18 @@ export default function Footer() {
             </a>
           ))}
         </div>
-        <div className="mt-8 md:order-1 md:mt-0">
-          <p className="text-center text-base text-black">
+        <div className="mt-8 md:order-1 md:mt-0 text-center">
+          <p className="text-base text-black">
             &copy; {new Date().getFullYear()} Build for Celo Europe by AXMC.
           </p>
+          <div className="mt-2 space-x-4">
+            <a href="/privacypolicy" className="text-sm text-black hover:text-forest underline">
+              Privacy Policy
+            </a>
+            <a href="/cookiepolicy" className="text-sm text-black hover:text-forest underline">
+              Cookie Policy
+            </a>
+          </div>
         </div>
       </div>
     </footer>

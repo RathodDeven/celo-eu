@@ -704,4 +704,4 @@ export const nexusExplorerAbi = [
   },
 ];
 export const nexusExplorerAddress =
-  "0x2dF325EC716915A7d940a10B48bd8E5e56ef9c9E";
+  "0xC3c5FC575164EB936B0D726873A6f68213e9991d";

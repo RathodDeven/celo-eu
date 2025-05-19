@@ -135,12 +135,12 @@ export default function Home() {
         className="mb-6 rounded-full shadow-md"
         priority
       />
-      <h1 className="text-3xl font-bold text-center mb-4">Welcome to Celo Europe</h1>
+      <h1 className="text-3xl font-bold text-center mb-4">Accelerating Celo in Europe</h1>
       <p className="text-center text-gray-600 max-w-xl mb-2">
-        Celo Europe is a regional initiative supporting builders, educators, and ecosystem leaders to drive real-world adoption of regenerative technologies on Celo.
+        #CeloEU supports mission-driven entrepreneurs and creators to build lasting solutions that leverage the Celo Ecosystem.
       </p>
       <a
-        href="https://app.charmverse.io/celo-eu-notebook-defiant-smartcontract-minnow/activities-celoeu-1919356630697271?viewId=e835c64b-5f4f-48c6-a911-337d8b42b07b"
+        href="https://app.charmverse.io/celo-europe/activities-celoeu-1919356630697271?viewId=e835c64b-5f4f-48c6-a911-337d8b42b07b"
         target="_blank"
         rel="noopener noreferrer"
         className="mb-6 rounded-full bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700"
