@@ -6,17 +6,21 @@ import Link from "next/link";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { createPublicClient, createWalletClient, custom, http } from "viem";
-import { celoAlfajores } from "viem/chains";
+import { celo } from "viem/chains";
+import emailjs from "@emailjs/browser";
 import {
   nexusExplorerAbi,
   nexusExplorerAddress,
 } from "@/lib/abi/NexusExplorerBadge";
 
-export default function NexusProgram() {
+export default function VekiProgram() {
   const { address, getUserAddress } = useWeb3();
   const [hasNFT, setHasNFT] = useState<boolean | null>(null);
   const [minting, setMinting] = useState(false);
   const [mintError, setMintError] = useState<string | null>(null);
+  const [emailSent, setEmailSent] = useState(false);
+  const [formData, setFormData] = useState({ name: "", username: "", email: "" });
+  const [sendingEmail, setSendingEmail] = useState(false);
   const router = useRouter();
 
   const formatAddress = (addr: string) =>
@@ -25,7 +29,7 @@ export default function NexusProgram() {
   const publicClient = useMemo(
     () =>
       createPublicClient({
-        chain: celoAlfajores,
+        chain: celo,
         transport: http(),
       }),
     []
@@ -39,19 +43,44 @@ export default function NexusProgram() {
     const checkOwnership = async () => {
       if (!address) return;
       try {
-        const tokenIds = await publicClient.readContract({
+        const tokenIds = (await publicClient.readContract({
           address: nexusExplorerAddress,
           abi: nexusExplorerAbi,
           functionName: "getNFTsByAddress",
           args: [formatAddress(address)],
-        }) as bigint[];
+        })) as bigint[];
         setHasNFT(tokenIds.length > 0);
       } catch (err) {
         console.error("❌ Error checking NFT ownership:", err);
       }
     };
     checkOwnership();
+
+    if (address) {
+      const alreadySubmitted = localStorage.getItem(`celo-eu-form-${address}`);
+      if (alreadySubmitted) setEmailSent(true);
+    }
   }, [address, publicClient]);
+
+  const handleSendEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSendingEmail(true);
+    try {
+      await emailjs.send(
+        process.env.EMAILJS_SERVICE_ID!,
+        process.env.EMAILJS_TEMPLATE_ID!,
+        formData,
+        process.env.EMAILJS_PUBLIC_KEY!
+      );
+      localStorage.setItem(`celo-eu-form-${address}`, "true");
+      setEmailSent(true);
+    } catch (err: any) {
+      console.error("❌ Email failed:", err?.text || err?.message || err);
+      setEmailSent(false);
+    } finally {
+      setSendingEmail(false);
+    }
+  };
 
   const handleMint = useCallback(async () => {
     setMintError(null);
@@ -64,7 +93,7 @@ export default function NexusProgram() {
       (window.ethereum.providers?.find((p: any) => p.isMetaMask) ?? window.ethereum) as any;
 
     const walletClient = createWalletClient({
-      chain: celoAlfajores,
+      chain: celo,
       transport: custom(provider),
     });
 
@@ -87,65 +116,99 @@ export default function NexusProgram() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-10">
-      <h1 className="text-4xl font-bold text-center mb-6">The Nexus Program</h1>
-      <p className="text-center text-gray-700 mb-10">
-        The Nexus Program is Celo Europe&apos;s community-powered membership system. By minting a Nexus Pass, you become a recognized contributor to the mission of building regenerative solutions in Europe using blockchain.
+      <h1 className="text-4xl font-bold text-center mb-6">The Veki Program</h1>
+      <p className="text-center text-gray-700 mb-6">
+        The Veki Program is Celo Europe&apos;s community-powered membership system. By collecting a Veki badge, you become a recognized contributor to building regenerative, decentralized solutions in Europe.
       </p>
 
       <div className="flex flex-col sm:flex-row items-center bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-8">
         <div className="sm:w-1/3 mb-4 sm:mb-0 sm:mr-6 flex justify-center">
           <Image
             src="/explorer%20badge.png"
-            alt="Nexus Explorer Badge"
+            alt="Veki Explorer Badge"
             width={180}
             height={180}
             className="rounded"
           />
         </div>
         <div className="sm:w-2/3">
-          <h2 className="text-2xl font-semibold mb-2">🎒 Nexus Pass: Explorer</h2>
+          <h2 className="text-2xl font-semibold mb-2">Explorer Badge</h2>
           <p className="text-gray-700">
-            The first level of our membership is the <strong>Explorer Pass</strong>. It&apos;s open to anyone and can be minted directly from our dashboard. As an Explorer, you gain access to:
+            The <strong>Explorer</strong> badge grants access to exclusive content inside this DApp, including governance simulations, early missions, and learning quests.
           </p>
-          <ul className="list-disc list-inside text-gray-700 mt-2">
-            <li>Our Charmverse space for coordination</li>
-            <li>Community discussions and feedback channels</li>
-            <li>Early-bird access to local events and workshops</li>
-          </ul>
+          <p className="text-gray-700 mt-2">
+            The next badge, <strong>Contributor</strong>, will be distributed at in-person events or through special campaigns and grants access to Celo Europe&apos;s Charmverse workspace.
+          </p>
         </div>
       </div>
 
       <section className="mb-10">
-        <h2 className="text-2xl font-semibold mb-3">What&apos;s Next?</h2>
+        <h2 className="text-2xl font-semibold mb-3">Path to Governance</h2>
         <p className="text-gray-700">
-          More membership levels will be introduced soon, each with specific roles and responsibilities in shaping the Celo Europe ecosystem. By participating in missions and events, your pass will evolve — unlocking new powers and access along the way.
+          As you participate in events, discussions, or missions, your Veki badge evolves. This journey will unlock higher access levels, co-creation opportunities, and influence over Celo Europe initiatives.
         </p>
       </section>
 
-      <section>
-        {hasNFT === null ? (
-          <p className="text-sm text-gray-500">Checking membership status...</p>
-        ) : address ? (
-          hasNFT ? (
-            <Link href="/dashboard">
-              <button className="inline-block bg-yellow-400 text-black px-6 py-3 rounded-md text-sm font-semibold hover:bg-yellow-300">
-                🧭 Go to Your Dashboard
+      {!emailSent ? (
+        <form onSubmit={handleSendEmail} className="flex flex-col gap-4 mt-6 w-full max-w-md">
+          <input
+            type="text"
+            placeholder="Name"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            className="border rounded px-4 py-2"
+            required
+          />
+          <input
+            type="text"
+            placeholder="Username"
+            value={formData.username}
+            onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+            className="border rounded px-4 py-2"
+            required
+          />
+          <input
+            type="email"
+            placeholder="Email"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            className="border rounded px-4 py-2"
+            required
+          />
+          <button
+            type="submit"
+            className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
+            disabled={sendingEmail}
+          >
+            {sendingEmail ? "Sending..." : "Submit"}
+          </button>
+        </form>
+      ) : (
+        <section className="mt-6">
+          {hasNFT === null ? (
+            <p className="text-sm text-gray-500">Checking membership status...</p>
+          ) : address ? (
+            hasNFT ? (
+              <Link href="/dashboard">
+                <button className="inline-block bg-yellow-400 text-black px-6 py-3 rounded-md text-sm font-semibold hover:bg-yellow-300">
+                  Go to Your Dashboard
+                </button>
+              </Link>
+            ) : (
+              <button
+                onClick={handleMint}
+                className="inline-block bg-yellow-400 text-black px-6 py-3 rounded-md text-sm font-semibold hover:bg-yellow-300 disabled:opacity-50"
+                disabled={minting}
+              >
+                {minting ? "Minting..." : "Mint Explorer Badge"}
               </button>
-            </Link>
+            )
           ) : (
-            <button
-              onClick={handleMint}
-              className="inline-block bg-yellow-400 text-black px-6 py-3 rounded-md text-sm font-semibold hover:bg-yellow-300 disabled:opacity-50"
-              disabled={minting}
-            >
-              {minting ? "Minting..." : "Mint your Nexus Pass"}
-            </button>
-          )
-        ) : (
-          <p className="text-red-600">Please connect your wallet first.</p>
-        )}
-        {mintError && <p className="text-red-600 mt-4 text-sm">{mintError}</p>}
-      </section>
+            <p className="text-red-600">Please connect your wallet first.</p>
+          )}
+          {mintError && <p className="text-red-600 mt-4 text-sm">{mintError}</p>}
+        </section>
+      )}
     </div>
   );
 }
