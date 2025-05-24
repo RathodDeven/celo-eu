@@ -101,16 +101,16 @@ export default function SuccessPage() {
         <p className="text-sm text-gray-500 mb-6">Loading your badge...</p>
       )}
 
-      <div className="flex flex-col sm:flex-row gap-4 mt-4">
+      <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-4">
         <Link
           href="/veki"
-          className="mb-6 rounded-full bg-[#022a80] px-6 py-2 text-sm font-semibold text-white hover:bg-[#FFCC00]"
+          className="rounded-full bg-[#022a80] px-6 py-2 text-sm font-semibold text-white hover:bg-[#FFCC00]"
         >
           Veki Program
         </Link>
         <Link
           href="/dashboard"
-          className="mb-6 rounded-full bg-[#022a80] px-6 py-2 text-sm font-semibold text-white hover:bg-[#FFCC00]"
+          className="rounded-full bg-[#022a80] px-6 py-2 text-sm font-semibold text-white hover:bg-[#FFCC00]"
         >
           Go to Dashboard
         </Link>
