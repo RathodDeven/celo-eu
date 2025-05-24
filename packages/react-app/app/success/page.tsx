@@ -76,11 +76,6 @@ export default function SuccessPage() {
 
   return (
     <div className="flex flex-col justify-center items-center px-4 py-12 max-w-4xl mx-auto">
-      <div className="flex justify-center mb-8 gap-6">
-        <Image src="/explorer%20badge.png" alt="Explorer Badge" width={80} height={80} className="rounded-full" />
-        <Image src="/badge%201.png" alt="Contributor Badge" width={80} height={80} className="rounded-full" />
-      </div>
-
       <h1 className="text-4xl font-bold text-white mb-4 text-center">
         Congratulations!
       </h1>

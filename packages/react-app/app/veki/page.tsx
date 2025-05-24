@@ -118,33 +118,28 @@ export default function VekiProgram() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-10">
-      <div className="flex justify-center mb-8 gap-6">
-        <Image src="/explorer%20badge.png" alt="Explorer Badge" width={80} height={80} className="rounded-full" />
-        <Image src="/badge%201.png" alt="Contributor Badge" width={80} height={80} className="rounded-full" />
-      </div>
-
       <h1 className="text-4xl font-bold text-center mb-6">The Veki Program</h1>
       <p className="text-center text-gray-700 mb-6">
         Veki is Celo Europe&apos;s community-powered badge system. By collecting a Veki badge, you join the movement to shape decentralized regenerative solutions across Europe.
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10">
-        <div className="p-6 border rounded bg-yellow-50">
-          <h2 className="text-2xl font-semibold mb-2">🥾 Explorer Badge</h2>
-          <p className="text-gray-700 text-sm mb-2">
+        <div className="p-6 border rounded bg-yellow-50 text-center">
+          <h2 className="text-2xl font-semibold mb-2">Explorer Badge</h2>
+          <p className="text-gray-700 text-sm">
             Access the DApp, governance simulators, and learning quests. Mintable here. Required to participate in on-chain reputation.
           </p>
         </div>
-        <div className="p-6 border rounded bg-purple-50">
-          <h2 className="text-2xl font-semibold mb-2">🧩 Contributor Badge</h2>
-          <p className="text-gray-700 text-sm mb-2">
+        <div className="p-6 border rounded bg-purple-50 text-center">
+          <h2 className="text-2xl font-semibold mb-2">Contributor Badge</h2>
+          <p className="text-gray-700 text-sm">
             Awarded during IRL events and quests. Unlocks governance missions, Charmverse workspace, and project collaborations.
           </p>
         </div>
       </div>
 
       {!emailSent ? (
-        <form onSubmit={handleSendEmail} className="flex flex-col gap-4 mt-6 w-full max-w-md">
+        <form onSubmit={handleSendEmail} className="flex flex-col gap-4 mt-6 w-full max-w-md mx-auto">
           <input
             type="text"
             placeholder="Name"
@@ -178,10 +173,10 @@ export default function VekiProgram() {
           </button>
         </form>
       ) : (
-        <section className="mt-6">
+        <section className="mt-6 text-center">
           {showVerifyMsg && (
             <p className="text-green-600 text-sm mb-4">
-              ✅ Please verify your email address and collect your pass.
+              Please verify your email address and collect your pass.
             </p>
           )}
           {hasNFT === null ? (

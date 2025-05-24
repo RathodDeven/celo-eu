@@ -2,6 +2,7 @@
 
 import { useWeb3 } from "@/contexts/useWeb3";
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { createPublicClient, http } from "viem";
@@ -74,27 +75,45 @@ export default function DashboardPage() {
   }, [address, publicClient]);
 
   return (
-    <div className="flex flex-col items-center justify-center px-4 py-10 max-w-5xl mx-auto">
-      <h1 className="text-4xl font-bold text-center mb-8 text-[#FFFFFF]">
+    <div className="flex flex-col items-center justify-center px-4 py-10 max-w-6xl mx-auto">
+      <h1 className="text-4xl font-bold text-center mb-12 text-white">
         Your Badge Dashboard
       </h1>
 
-      {badgeImages.length === 0 ? (
-        <p className="text-gray-600">No badges found for this wallet.</p>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {badgeImages.map((img, idx) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start w-full">
+        <div className="flex justify-center">
+          {badgeImages.length > 0 ? (
             <Image
-              key={idx}
-              src={img}
-              alt={`Badge ${idx + 1}`}
-              width={220}
-              height={220}
+              src="/explorer badge.png"
+              alt="Your Explorer Veki Pass"
+              width={300}
+              height={300}
               className="rounded-xl border shadow-md"
             />
-          ))}
+          ) : (
+            <div className="text-gray-400 text-center border rounded-xl shadow-md w-[300px] h-[300px] flex items-center justify-center">
+              No badge found.
+            </div>
+          )}
         </div>
-      )}
+
+        <div className="text-white">
+          <h2 className="text-2xl font-semibold mb-4">Welcome to the Veki Program</h2>
+          <p className="mb-6 text-gray-900">
+            You've successfully collected your badge. Continue your journey by
+            accessing our Charmverse workspace. There you can join governance
+            simulations, contribute to proposals, and grow your reputation in the
+            Celo Europe ecosystem.
+          </p>
+          <Link
+            href="https://app.charmverse.io/celo-europe"
+            target="_blank"
+            className="mb-6 rounded-full bg-[#022a80] px-6 py-2 text-sm font-semibold text-white hover:bg-[#FFCC00]"
+          >
+            Access Charmverse Workspace
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
