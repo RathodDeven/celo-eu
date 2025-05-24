@@ -118,6 +118,11 @@ export default function VekiProgram() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-10">
+      <div className="flex justify-center mb-8 gap-6">
+        <Image src="/explorer%20badge.png" alt="Explorer Badge" width={80} height={80} className="rounded-full" />
+        <Image src="/badge%201.png" alt="Contributor Badge" width={80} height={80} className="rounded-full" />
+      </div>
+
       <h1 className="text-4xl font-bold text-center mb-6">The Veki Program</h1>
       <p className="text-center text-gray-700 mb-6">
         Veki is Celo Europe&apos;s community-powered badge system. By collecting a Veki badge, you join the movement to shape decentralized regenerative solutions across Europe.
@@ -184,7 +189,7 @@ export default function VekiProgram() {
           ) : address ? (
             hasNFT ? (
               <Link href="/dashboard">
-                <button className="inline-block bg-yellow-400 text-black px-6 py-3 rounded-md text-sm font-semibold hover:bg-yellow-300">
+                <button className="mb-6 rounded-full bg-[#022a80] px-6 py-2 text-sm font-semibold text-white hover:bg-[#FFCC00]">
                   Go to Your Dashboard
                 </button>
               </Link>

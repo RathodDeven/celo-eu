@@ -76,11 +76,16 @@ export default function SuccessPage() {
 
   return (
     <div className="flex flex-col justify-center items-center px-4 py-12 max-w-4xl mx-auto">
+      <div className="flex justify-center mb-8 gap-6">
+        <Image src="/explorer%20badge.png" alt="Explorer Badge" width={80} height={80} className="rounded-full" />
+        <Image src="/badge%201.png" alt="Contributor Badge" width={80} height={80} className="rounded-full" />
+      </div>
+
       <h1 className="text-4xl font-bold text-white mb-4 text-center">
         Congratulations!
       </h1>
       <p className="text-lg text-gray-700 text-center mb-6">
-        You have successfully claimed your <strong>Nexus Explorer Badge</strong>.
+        You have successfully claimed your <strong>Veki Explorer Badge</strong>.
       </p>
       {badgeImage ? (
         <div className="relative w-[220px] h-[220px] mb-6">
@@ -99,13 +104,13 @@ export default function SuccessPage() {
       <div className="flex flex-col sm:flex-row gap-4 mt-4">
         <Link
           href="/veki"
-          className="bg-[#0070F3] hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded text-center"
+          className="mb-6 rounded-full bg-[#022a80] px-6 py-2 text-sm font-semibold text-white hover:bg-[#FFCC00]"
         >
           Veki Program
         </Link>
         <Link
           href="/dashboard"
-          className="bg-[#0070F3] hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded text-center"
+          className="mb-6 rounded-full bg-[#022a80] px-6 py-2 text-sm font-semibold text-white hover:bg-[#FFCC00]"
         >
           Go to Dashboard
         </Link>
