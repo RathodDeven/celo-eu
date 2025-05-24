@@ -127,7 +127,7 @@ export default function VekiProgram() {
         <div className="p-6 border rounded bg-yellow-50 text-center">
           <h2 className="text-2xl font-semibold mb-2">Explorer Badge</h2>
           <p className="text-gray-700 text-sm">
-            Access the DApp, governance simulators, and learning quests. Mintable here. Required to participate in on-chain reputation.
+            The first level of our membership is the Explorer Pass. It's open to anyone and can be minted directly from our dashboard. As an Explorer, you gain access to our Charmverse space for coordination, community discussions and feedback channels, early-bird access to local events and workshops
           </p>
         </div>
         <div className="p-6 border rounded bg-purple-50 text-center">

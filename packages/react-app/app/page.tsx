@@ -79,7 +79,7 @@ export default function Home() {
       <h1 className="text-3xl font-bold text-center mb-4 text-white">
         Accelerating Celo in Europe
       </h1>
-      <p className="text-center text-gray-400 max-w-xl mb-4">
+      <p className="text-center text-gray-900 max-w-xl mb-4">
         #CeloEU supports mission-driven entrepreneurs and creators to build lasting
         solutions that leverage the Celo ecosystem.
       </p>
