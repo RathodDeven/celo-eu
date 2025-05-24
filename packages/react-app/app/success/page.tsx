@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { createPublicClient, http } from "viem";
-import { celoAlfajores } from "viem/chains";
+import { celo } from "viem/chains";
 import {
   nexusExplorerAbi,
   nexusExplorerAddress,
@@ -21,7 +21,7 @@ export default function SuccessPage() {
   const publicClient = useMemo(
     () =>
       createPublicClient({
-        chain: celoAlfajores,
+        chain: celo,
         transport: http(),
       }),
     []
@@ -85,7 +85,7 @@ export default function SuccessPage() {
       {badgeImage ? (
         <img
           src={badgeImage}
-          alt="Nexus Explorer Badge"
+          alt="Veki Explorer Badge"
           width={220}
           height={220}
           className="mb-6 rounded-xl border shadow-lg"
@@ -96,10 +96,10 @@ export default function SuccessPage() {
 
       <div className="flex flex-col sm:flex-row gap-4 mt-4">
         <Link
-          href="/nexus"
+          href="/veki"
           className="bg-[#0070F3] hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded text-center"
         >
-          Nexus Program
+          Veki Program
         </Link>
         <Link
           href="/dashboard"
