@@ -8,11 +8,10 @@ const CookiePolicyPage = () => {
   return (
     <div className="max-w-4xl mx-auto px-6 py-12 text-gray-800">
       <h1 className="text-3xl font-bold mb-4">Cookie Policy</h1>
-      <p className="text-sm text-gray-500 mb-8">Last Updated: May 19, 2025
-      </p>
+      <p className="text-sm text-gray-500 mb-8">Last Updated: May 19, 2025</p>
 
       <p className="mb-6">
-        This Cookie Policy explains how Celo DAO Europe ("we", "us", "our") uses cookies and similar technologies
+        This Cookie Policy explains how Celo DAO Europe (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) uses cookies and similar technologies
         to recognize you when you visit our website at{' '}
         <a href="https://www.celoeu.org" className="text-blue-600 underline">https://www.celoeu.org</a>.
         It explains what these technologies are, why we use them, and your rights to control their use.
@@ -57,7 +56,7 @@ const CookiePolicyPage = () => {
 
       <h2 className="text-xl font-semibold mt-8 mb-2">Will this policy change?</h2>
       <p className="mb-6">
-        We may update this policy as our use of cookies evolves. The "Last Updated" date at the top of this page reflects
+        We may update this policy as our use of cookies evolves. The &quot;Last Updated&quot; date at the top of this page reflects
         the most recent changes. We encourage you to review this policy periodically.
       </p>
 

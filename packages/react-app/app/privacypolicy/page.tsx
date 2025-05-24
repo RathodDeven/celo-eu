@@ -12,7 +12,7 @@ const PrivacyPolicyPage = () => {
 
       <p className="mb-6">
         Thank you for choosing to be part of our community at Celo DAO Europe, doing business as
-        Celo Europe ("Celo Europe", "we", "us", or "our"). We are committed to protecting your
+        Celo Europe (&quot;Celo Europe&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;). We are committed to protecting your
         personal information and your right to privacy. If you have any questions or concerns about
         this privacy notice or our practices, please contact us at{' '}
         <a href="mailto:rica@celoeu.org" className="text-blue-600 underline">rica@celoeu.org</a>.
@@ -27,7 +27,7 @@ const PrivacyPolicyPage = () => {
       </ul>
 
       <p className="mb-6">
-        By "Website", we mean any Celo Europe site linking to this notice. By "Services", we refer
+        By &quot;Website&quot;, we mean any Celo Europe site linking to this notice. By &quot;Services&quot;, we refer
         to our Website and related operations.
       </p>
 

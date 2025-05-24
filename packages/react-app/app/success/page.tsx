@@ -76,20 +76,22 @@ export default function SuccessPage() {
 
   return (
     <div className="flex flex-col justify-center items-center px-4 py-12 max-w-4xl mx-auto">
-      <h1 className="text-4xl font-bold text-[#FFFFFF] mb-4 text-center">
+      <h1 className="text-4xl font-bold text-white mb-4 text-center">
         Congratulations!
       </h1>
       <p className="text-lg text-gray-700 text-center mb-6">
         You have successfully claimed your <strong>Nexus Explorer Badge</strong>.
       </p>
       {badgeImage ? (
-        <img
-          src={badgeImage}
-          alt="Veki Explorer Badge"
-          width={220}
-          height={220}
-          className="mb-6 rounded-xl border shadow-lg"
-        />
+        <div className="relative w-[220px] h-[220px] mb-6">
+          <Image
+            src={badgeImage}
+            alt="Veki Explorer Badge"
+            fill
+            className="rounded-xl border shadow-lg object-contain"
+            sizes="220px"
+          />
+        </div>
       ) : (
         <p className="text-sm text-gray-500 mb-6">Loading your badge...</p>
       )}
