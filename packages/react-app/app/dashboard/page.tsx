@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { createPublicClient, http } from "viem";
-import { celoAlfajores } from "viem/chains";
+import { celo } from "viem/chains";
 import {
   nexusExplorerAbi,
   nexusExplorerAddress,
@@ -20,7 +20,7 @@ export default function DashboardPage() {
   const publicClient = useMemo(
     () =>
       createPublicClient({
-        chain: celoAlfajores,
+        chain: celo,
         transport: http(),
       }),
     []

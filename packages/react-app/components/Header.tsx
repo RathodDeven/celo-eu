@@ -46,10 +46,10 @@ export default function Header() {
                     Guide
                   </Link>
                   <Link
-                    href="/nexus"
+                    href="/veki"
                     className="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-black hover:border-yellow-300"
                   >
-                    Nexus Program
+                    Veki Program
                   </Link>
                 </div>
               </div>
