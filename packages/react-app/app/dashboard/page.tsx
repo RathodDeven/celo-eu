@@ -84,8 +84,8 @@ export default function DashboardPage() {
         <div className="flex justify-center">
           {badgeImages.length > 0 ? (
             <Image
-              src="/explorer badge.png"
-              alt="Your Explorer Veki Pass"
+              src="/explorer%20badge.png"
+              alt="Explorer Veki Pass Image"
               width={300}
               height={300}
               className="rounded-xl border shadow-md"
@@ -100,7 +100,7 @@ export default function DashboardPage() {
         <div className="text-white">
           <h2 className="text-2xl font-semibold mb-4">Welcome to the Veki Program</h2>
           <p className="mb-6 text-gray-900">
-            You've successfully collected your badge. Continue your journey by
+            You&apos;ve successfully collected your badge. Continue your journey by
             accessing our Charmverse workspace. There you can join governance
             simulations, contribute to proposals, and grow your reputation in the
             Celo Europe ecosystem.
