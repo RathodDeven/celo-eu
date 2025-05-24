@@ -21,6 +21,7 @@ export default function VekiProgram() {
   const [emailSent, setEmailSent] = useState(false);
   const [formData, setFormData] = useState({ name: "", username: "", email: "" });
   const [sendingEmail, setSendingEmail] = useState(false);
+  const [showVerifyMsg, setShowVerifyMsg] = useState(false);
   const router = useRouter();
 
   const formatAddress = (addr: string) =>
@@ -74,6 +75,7 @@ export default function VekiProgram() {
       );
       localStorage.setItem(`celo-eu-form-${address}`, "true");
       setEmailSent(true);
+      setShowVerifyMsg(true);
     } catch (err: any) {
       console.error("❌ Email failed:", err?.text || err?.message || err);
       setEmailSent(false);
@@ -118,36 +120,23 @@ export default function VekiProgram() {
     <div className="max-w-4xl mx-auto px-4 py-10">
       <h1 className="text-4xl font-bold text-center mb-6">The Veki Program</h1>
       <p className="text-center text-gray-700 mb-6">
-        The Veki Program is Celo Europe&apos;s community-powered membership system. By collecting a Veki badge, you become a recognized contributor to building regenerative, decentralized solutions in Europe.
+        Veki is Celo Europe&apos;s community-powered badge system. By collecting a Veki badge, you join the movement to shape decentralized regenerative solutions across Europe.
       </p>
 
-      <div className="flex flex-col sm:flex-row items-center bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-8">
-        <div className="sm:w-1/3 mb-4 sm:mb-0 sm:mr-6 flex justify-center">
-          <Image
-            src="/explorer%20badge.png"
-            alt="Veki Explorer Badge"
-            width={180}
-            height={180}
-            className="rounded"
-          />
-        </div>
-        <div className="sm:w-2/3">
-          <h2 className="text-2xl font-semibold mb-2">Explorer Badge</h2>
-          <p className="text-gray-700">
-            The <strong>Explorer</strong> badge grants access to exclusive content inside this DApp, including governance simulations, early missions, and learning quests.
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10">
+        <div className="p-6 border rounded bg-yellow-50">
+          <h2 className="text-2xl font-semibold mb-2">🥾 Explorer Badge</h2>
+          <p className="text-gray-700 text-sm mb-2">
+            Access the DApp, governance simulators, and learning quests. Mintable here. Required to participate in on-chain reputation.
           </p>
-          <p className="text-gray-700 mt-2">
-            The next badge, <strong>Contributor</strong>, will be distributed at in-person events or through special campaigns and grants access to Celo Europe&apos;s Charmverse workspace.
+        </div>
+        <div className="p-6 border rounded bg-purple-50">
+          <h2 className="text-2xl font-semibold mb-2">🧩 Contributor Badge</h2>
+          <p className="text-gray-700 text-sm mb-2">
+            Awarded during IRL events and quests. Unlocks governance missions, Charmverse workspace, and project collaborations.
           </p>
         </div>
       </div>
-
-      <section className="mb-10">
-        <h2 className="text-2xl font-semibold mb-3">Path to Governance</h2>
-        <p className="text-gray-700">
-          As you participate in events, discussions, or missions, your Veki badge evolves. This journey will unlock higher access levels, co-creation opportunities, and influence over Celo Europe initiatives.
-        </p>
-      </section>
 
       {!emailSent ? (
         <form onSubmit={handleSendEmail} className="flex flex-col gap-4 mt-6 w-full max-w-md">
@@ -185,6 +174,11 @@ export default function VekiProgram() {
         </form>
       ) : (
         <section className="mt-6">
+          {showVerifyMsg && (
+            <p className="text-green-600 text-sm mb-4">
+              ✅ Please verify your email address and collect your pass.
+            </p>
+          )}
           {hasNFT === null ? (
             <p className="text-sm text-gray-500">Checking membership status...</p>
           ) : address ? (

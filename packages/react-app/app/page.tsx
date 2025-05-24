@@ -62,7 +62,7 @@ export default function Home() {
       const hasExplorerBadge = tokenIds.some((id) => explorerBadgeIds.includes(id));
 
       if (hasExplorerBadge) {
-        router.push("/nexus"); // Redirect to the Nexus Program page if Explorer badge is found
+        router.push("/dashboard");
       } else {
         setErrorMessage("You do not have the required badge to access the workspace.");
       }
