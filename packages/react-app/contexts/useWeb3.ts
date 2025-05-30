@@ -11,6 +11,10 @@ import {
     stringToHex,
 } from "viem";
 import { celoAlfajores } from "viem/chains";
+import {
+    nexusExplorerAbi,
+    nexusExplorerAddress,
+} from "@/lib/abi/NexusExplorerBadge";
 
 const publicClient = createPublicClient({
     chain: celoAlfajores,
@@ -137,5 +141,48 @@ export const useWeb3 = () => {
         mintMinipayNFT,
         getNFTs,
         signTransaction,
+        mintExplorerBadge,
+        checkIfBadgeMinted,
     };
 };
+
+    const mintExplorerBadge = async () => {
+        let walletClient = createWalletClient({
+            transport: custom(window.ethereum),
+            chain: celoAlfajores,
+        });
+
+        let [address] = await walletClient.getAddresses();
+
+        const tx = await walletClient.writeContract({
+            address: nexusExplorerAddress,
+            abi: nexusExplorerAbi,
+            functionName: "mintExplorerBadge",
+            account: address,
+            args: [],
+        });
+
+        const receipt = await publicClient.waitForTransactionReceipt({
+            hash: tx,
+        });
+
+        return receipt;
+    };
+
+    const checkIfBadgeMinted = async () => {
+        let walletClient = createWalletClient({
+            transport: custom(window.ethereum),
+            chain: celoAlfajores,
+        });
+
+        let [address] = await walletClient.getAddresses();
+
+        const hasMinted = await publicClient.readContract({
+            address: nexusExplorerAddress,
+            abi: nexusExplorerAbi,
+            functionName: "hasMinted",
+            args: [address],
+        });
+
+        return hasMinted as boolean;
+    };
