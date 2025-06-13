@@ -455,6 +455,19 @@ export const nexusExplorerAbi = [
     type: "function",
   },
   {
+    inputs: [
+      {
+        internalType: "address",
+        name: "recipient",
+        type: "address",
+      },
+    ],
+    name: "mintExplorerBadge",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
     inputs: [],
     name: "name",
     outputs: [
@@ -702,6 +715,5 @@ export const nexusExplorerAbi = [
     stateMutability: "nonpayable",
     type: "function",
   },
-];
-export const nexusExplorerAddress =
-  "0xC3c5FC575164EB936B0D726873A6f68213e9991d";
+]
+export const nexusExplorerAddress = "0x21d6Bfd948218D83c63C1F0Bb8A30e547D810056"

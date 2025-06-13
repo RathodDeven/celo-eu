@@ -54,7 +54,7 @@
     --primary: 48 100% 60%; /* Yellow-Gold for light on dark */
     --primary-foreground: 213 100% 10%;
 
-    --secondary: 213 40% 20%;
+    --secondary: 48 100% 60%; /* Keep same yellow for consistency */
     --secondary-foreground: 0 0% 98%;
 
     --muted: 213 30% 20%;
@@ -85,4 +85,9 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Custom styles for drawer */
+.no-handle [data-handle] {
+  display: none;
 }

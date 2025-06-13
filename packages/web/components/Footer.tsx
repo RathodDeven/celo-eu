@@ -1,8 +1,8 @@
-import React from "react";
+import React from "react"
 
 type Props = {
-  className?: string;
-};
+  className?: string
+}
 
 const navigation = [
   {
@@ -27,40 +27,50 @@ const navigation = [
       </svg>
     ),
   },
-];
+]
 
 export default function Footer() {
   return (
-    <footer className="bg-gypsum mt-auto border-black border-t">
-      <div className="mx-auto max-w-7xl py-6 px-4 sm:px-6 md:flex md:items-center md:justify-between lg:px-8">
-        <div className="flex justify-center space-x-6 md:order-2">
-          {navigation.map((item) => (
-            <a
-              key={item.name}
-              href={item.href}
-              className="text-black hover:text-forest"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <span className="sr-only">{item.name}</span>
-              <item.icon className="h-6 w-6" aria-hidden="true" />
-            </a>
-          ))}
-        </div>
-        <div className="mt-8 md:order-1 md:mt-0 text-center">
-          <p className="text-base text-black">
+    <footer className="bg-background border-t border-border/40 py-4 hidden sm:block">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-wrap items-center justify-between">
+          <p className="text-sm text-foreground">
             &copy; {new Date().getFullYear()} Build for Celo Europe by AXMC.
           </p>
-          <div className="mt-2 space-x-4">
-            <a href="/privacypolicy" className="text-sm text-black hover:text-forest underline">
-              Privacy Policy
-            </a>
-            <a href="/cookiepolicy" className="text-sm text-black hover:text-forest underline">
-              Cookie Policy
-            </a>
+
+          <div className="flex space-x-4 items-center">
+            <div className="flex space-x-4">
+              <a
+                href="/privacypolicy"
+                className="text-xs text-foreground hover:text-primary"
+              >
+                Privacy Policy
+              </a>
+              <a
+                href="/cookiepolicy"
+                className="text-xs text-foreground hover:text-primary"
+              >
+                Cookie Policy
+              </a>
+            </div>
+
+            <div className="ml-4 flex space-x-2">
+              {navigation.map((item) => (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  className="text-foreground hover:text-primary"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <span className="sr-only">{item.name}</span>
+                  <item.icon className="h-5 w-5" aria-hidden="true" />
+                </a>
+              ))}
+            </div>
           </div>
         </div>
       </div>
     </footer>
-  );
+  )
 }
