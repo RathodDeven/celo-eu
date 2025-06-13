@@ -6,10 +6,10 @@
   "author": "axmc",
   "license": "MIT",
   "scripts": {
-    "react-app:dev": "pnpm --filter web dev",
-    "react-app:build": "pnpm --filter web build",
-    "react-app:start": "pnpm --filter web start",
-    "react-app:lint": "pnpm --filter web lint",
+    "web:dev": "pnpm --filter web dev",
+    "web:build": "pnpm --filter web build",
+    "web:start": "pnpm --filter web start",
+    "web:lint": "pnpm --filter web lint",
     "hardhat:compile": "pnpm --filter hardhat compile",
     "hardhat:test": "pnpm --filter hardhat test"
   },
