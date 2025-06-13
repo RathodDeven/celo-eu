@@ -6,10 +6,12 @@
   "author": "axmc",
   "license": "MIT",
   "scripts": {
-    "react-app:dev": "yarn workspace react-app dev",
-    "react-app:build": "yarn workspace react-app build",
-    "react-app:start": "yarn workspace react-app start",
-    "react-app:lint": "yarn workspace react-app lint"
+    "react-app:dev": "pnpm --filter web dev",
+    "react-app:build": "pnpm --filter web build",
+    "react-app:start": "pnpm --filter web start",
+    "react-app:lint": "pnpm --filter web lint",
+    "hardhat:compile": "pnpm --filter hardhat compile",
+    "hardhat:test": "pnpm --filter hardhat test"
   },
   "repository": {
     "type": "git",
@@ -19,19 +21,14 @@
     "url": "https://github.com/celo-org/celo-composer/issues"
   },
   "homepage": "https://github.com/celo-org/celo-composer/blob/main/README.md",
-  "workspaces": {
-    "packages": [
-      "packages/*"
-    ],
-    "nohoist": [
-      "hardhat/@openzeppelin/contracts"
-    ]
-  },
+  "workspaces": [
+    "packages/*"
+  ],
   "keywords": [
     "celo-composer",
     "celo"
   ],
-  "packageManager": "yarn@4.9.1",
+  "packageManager": "pnpm@10.12.1",
   "dependencies": {
     "@tanstack/query-core": "^4.29.14",
     "lit": "^3.3.0",

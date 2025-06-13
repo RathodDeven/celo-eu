@@ -21,6 +21,7 @@
     "ethers": "^6.6.2",
     "hardhat": "^2.22.2",
     "hardhat-gas-reporter": "^1.0.8",
+    "rimraf": "^6.0.1",
     "solidity-coverage": "^0.8.1",
     "ts-node": "^10.9.2",
     "typechain": "^8.3.2",
@@ -31,9 +32,10 @@
   },
   "scripts": {
     "compile": "hardhat compile",
-    "tsc": "tsc -p . && cp typechain/*.d.ts dist/typechain/",
-    "build": "npm run compile && npm run tsc",
-    "clean": "hardhat clean",
+    "tsc": "tsc -p .",
+    "build": "pnpm run compile && pnpm run tsc",
+    "generate-types": "hardhat typechain",
+    "clean": "hardhat clean && rimraf dist",
     "run:node": "hardhat node",
     "test": "hardhat test",
     "prettier": "prettier --write 'contracts/**/*.sol' '**/*.ts'"
