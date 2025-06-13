@@ -19,9 +19,14 @@
     "url": "https://github.com/celo-org/celo-composer/issues"
   },
   "homepage": "https://github.com/celo-org/celo-composer/blob/main/README.md",
-  "workspaces": [
-    "packages/*"
-  ],
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ],
+    "nohoist": [
+      "hardhat/@openzeppelin/contracts"
+    ]
+  },
   "keywords": [
     "celo-composer",
     "celo"
