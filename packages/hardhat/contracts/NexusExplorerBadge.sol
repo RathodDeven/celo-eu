@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
@@ -18,12 +18,14 @@ contract NexusExplorerBadge is
     string private _baseBadgeURI;
     mapping(address => bool) public hasMinted;
 
-    event ExplorerBadgeMinted(address indexed recipient, uint256 indexed tokenId);
+    event ExplorerBadgeMinted(
+        address indexed recipient,
+        uint256 indexed tokenId
+    );
 
-    constructor(address initialOwner)
-        ERC721("Nexus Explorer Badge", "NXEXP")
-        Ownable(initialOwner)
-    {
+    constructor(
+        address initialOwner
+    ) ERC721("Nexus Explorer Badge", "NXEXP") Ownable(initialOwner) {
         _baseBadgeURI = "ipfs://bafkreid2wtv65ife2zk2wic4exfn5whxk4gcy4ly4ybfvxuywjtvmips2e";
     }
 
@@ -37,16 +39,28 @@ contract NexusExplorerBadge is
 
     /// @notice Mint a badge to the recipient with predefined metadata
     function mintExplorerBadge() public {
-    require(!hasMinted[msg.sender], "Already minted");
-    uint256 tokenId = _nextTokenId++;
-    _safeMint(msg.sender, tokenId);
-    _setTokenURI(tokenId, _baseBadgeURI);
-    hasMinted[msg.sender] = true;
-    emit ExplorerBadgeMinted(msg.sender, tokenId);
+        require(!hasMinted[msg.sender], "Already minted");
+        uint256 tokenId = _nextTokenId++;
+        _safeMint(msg.sender, tokenId);
+        _setTokenURI(tokenId, _baseBadgeURI);
+        hasMinted[msg.sender] = true;
+        emit ExplorerBadgeMinted(msg.sender, tokenId);
+    }
+
+    /// @notice Admin function to mint a badge to a specific recipient
+    function mintExplorerBadge(address recipient) public onlyOwner {
+        require(!hasMinted[recipient], "Recipient already minted");
+        uint256 tokenId = _nextTokenId++;
+        _safeMint(recipient, tokenId);
+        _setTokenURI(tokenId, _baseBadgeURI);
+        hasMinted[recipient] = true;
+        emit ExplorerBadgeMinted(recipient, tokenId);
     }
 
     /// @notice Return all token IDs owned by an address
-    function getNFTsByAddress(address owner) public view returns (uint256[] memory) {
+    function getNFTsByAddress(
+        address owner
+    ) public view returns (uint256[] memory) {
         uint256 balance = balanceOf(owner);
         uint256[] memory result = new uint256[](balance);
         uint256 count = 0;

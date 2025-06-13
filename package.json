@@ -6,10 +6,12 @@
   "author": "axmc",
   "license": "MIT",
   "scripts": {
-    "react-app:dev": "yarn workspace react-app dev",
-    "react-app:build": "yarn workspace react-app build",
-    "react-app:start": "yarn workspace react-app start",
-    "react-app:lint": "yarn workspace react-app lint"
+    "web:dev": "pnpm --filter web dev",
+    "web:build": "pnpm --filter web build",
+    "web:start": "pnpm --filter web start",
+    "web:lint": "pnpm --filter web lint",
+    "hardhat:compile": "pnpm --filter hardhat compile",
+    "hardhat:test": "pnpm --filter hardhat test"
   },
   "repository": {
     "type": "git",
@@ -26,7 +28,7 @@
     "celo-composer",
     "celo"
   ],
-  "packageManager": "yarn@4.9.1",
+  "packageManager": "pnpm@10.12.1",
   "dependencies": {
     "@tanstack/query-core": "^4.29.14",
     "lit": "^3.3.0",

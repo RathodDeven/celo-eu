@@ -31,7 +31,7 @@ Follow the on-screen instructions to authenticate your account.
 Navigate to the root directory of your Next.js app:
 
 ```bash
-cd packages/react-app
+cd packages/web
 ```
 
 ## Step 4: Deploy the App
