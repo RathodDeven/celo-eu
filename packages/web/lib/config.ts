@@ -7,8 +7,9 @@ export const NAV_URLS = {
   VEKI: "/veki",
   TEAM: "/team",
   DASHBOARD: "/dashboard",
-  RESOURCES: "/resources",
-  EVENTS: "/events",
+  // Set temporary external URLs for Resources and Events (will be internal routes later)
+  RESOURCES: "https://x.com/CeloEurope",
+  EVENTS: "https://x.com/CeloEurope",
   PRIVACY: "/privacypolicy",
   COOKIE: "/cookiepolicy",
 }

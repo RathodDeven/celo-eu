@@ -9,13 +9,11 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        colors: {
-          primary: "#00955f",
-          primaryComp: "#00c77f",
-          disableCard: "#C8D0CB",
-          primaryLight: "#CFF2E5",
-          secondary: "#EA3C58",
-        },
+        primary: "#00955f",
+        primaryComp: "#00c77f",
+        disableCard: "#C8D0CB",
+        primaryLight: "#CFF2E5",
+        secondary: "#EA3C58",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         card: {
@@ -66,6 +64,10 @@ module.exports = {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      animation: {
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
       },
     },
   },

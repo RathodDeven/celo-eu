@@ -36,6 +36,9 @@ const socialNavigation = [
   },
 ]
 
+// Helper function to determine if a URL is external
+const isExternalLink = (url: string) => url.startsWith("http")
+
 export default function Header() {
   const { theme } = useTheme()
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
@@ -46,6 +49,38 @@ export default function Header() {
 
   // Helper function to check if a link is active
   const isActive = (path: string) => pathname === path
+
+  // Render either Next.js Link or anchor tag based on URL type
+  const NavLink = ({
+    href,
+    className,
+    children,
+    onClick,
+  }: {
+    href: string
+    className: string
+    children: React.ReactNode
+    onClick?: () => void
+  }) => {
+    if (isExternalLink(href)) {
+      return (
+        <a
+          href={href}
+          className={className}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={onClick}
+        >
+          {children}
+        </a>
+      )
+    }
+    return (
+      <Link href={href} className={className} onClick={onClick}>
+        {children}
+      </Link>
+    )
+  }
 
   return (
     <nav className="bg-background text-foreground border-b border-border">
@@ -83,7 +118,7 @@ export default function Header() {
               />
             </div>
             <div className="sm:ml-6 sm:flex sm:space-x-8">
-              <Link
+              <NavLink
                 href={NAV_URLS.HOME}
                 className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium transition-colors duration-200 ${
                   isActive(NAV_URLS.HOME)
@@ -92,8 +127,8 @@ export default function Header() {
                 }`}
               >
                 Home
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 href={NAV_URLS.GUIDE}
                 className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium transition-colors duration-200 ${
                   isActive(NAV_URLS.GUIDE)
@@ -102,8 +137,9 @@ export default function Header() {
                 }`}
               >
                 Guide
-              </Link>
-              <Link
+              </NavLink>
+
+              <NavLink
                 href={NAV_URLS.TEAM}
                 className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium transition-colors duration-200 ${
                   isActive(NAV_URLS.TEAM)
@@ -112,39 +148,51 @@ export default function Header() {
                 }`}
               >
                 Team
-              </Link>
-              <Link
-                href={NAV_URLS.RESOURCES}
-                className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium transition-colors duration-200 ${
-                  isActive(NAV_URLS.RESOURCES)
-                    ? "border-brand-secondary text-foreground"
-                    : "border-transparent text-foreground/70 hover:border-brand-secondary/70 hover:text-foreground"
-                }`}
-              >
-                Resources
-              </Link>
-              <Link
-                href={NAV_URLS.EVENTS}
-                className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium transition-colors duration-200 ${
-                  isActive(NAV_URLS.EVENTS)
-                    ? "border-brand-secondary text-foreground"
-                    : "border-transparent text-foreground/70 hover:border-brand-secondary/70 hover:text-foreground"
-                }`}
-              >
-                Events
-              </Link>
-              <Link
-                href={NAV_URLS.VEKI}
-                className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium transition-colors duration-200 ${
-                  isActive(NAV_URLS.VEKI)
-                    ? "border-brand-secondary text-foreground"
-                    : "border-transparent text-foreground/70 hover:border-brand-secondary/70 hover:text-foreground"
-                }`}
-              >
-                Veki Program
-              </Link>
+              </NavLink>
+
               {isConnected && (
-                <Link
+                <NavLink
+                  href={NAV_URLS.RESOURCES}
+                  className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium transition-colors duration-200 ${
+                    isExternalLink(NAV_URLS.RESOURCES)
+                      ? "border-transparent text-foreground/70 hover:border-brand-secondary/70 hover:text-foreground"
+                      : isActive(NAV_URLS.RESOURCES)
+                      ? "border-brand-secondary text-foreground"
+                      : "border-transparent text-foreground/70 hover:border-brand-secondary/70 hover:text-foreground"
+                  }`}
+                >
+                  Resources
+                </NavLink>
+              )}
+
+              {isConnected && (
+                <NavLink
+                  href={NAV_URLS.EVENTS}
+                  className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium transition-colors duration-200 ${
+                    isExternalLink(NAV_URLS.EVENTS)
+                      ? "border-transparent text-foreground/70 hover:border-brand-secondary/70 hover:text-foreground"
+                      : isActive(NAV_URLS.EVENTS)
+                      ? "border-brand-secondary text-foreground"
+                      : "border-transparent text-foreground/70 hover:border-brand-secondary/70 hover:text-foreground"
+                  }`}
+                >
+                  Events
+                </NavLink>
+              )}
+              {isConnected && (
+                <NavLink
+                  href={NAV_URLS.VEKI}
+                  className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium transition-colors duration-200 ${
+                    isActive(NAV_URLS.VEKI)
+                      ? "border-brand-secondary text-foreground"
+                      : "border-transparent text-foreground/70 hover:border-brand-secondary/70 hover:text-foreground"
+                  }`}
+                >
+                  Veki Program
+                </NavLink>
+              )}
+              {isConnected && (
+                <NavLink
                   href={NAV_URLS.DASHBOARD}
                   className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium transition-colors duration-200 ${
                     isActive(NAV_URLS.DASHBOARD)
@@ -153,7 +201,7 @@ export default function Header() {
                   }`}
                 >
                   Dashboard
-                </Link>
+                </NavLink>
               )}
             </div>
           </div>
@@ -193,7 +241,7 @@ export default function Header() {
 
             {/* Navigation Links */}
             <div className="flex flex-col p-4 space-y-2 flex-1">
-              <Link
+              <NavLink
                 href={NAV_URLS.HOME}
                 className={`py-3 px-4 rounded-md font-medium transition-colors duration-200 ${
                   isActive(NAV_URLS.HOME)
@@ -203,8 +251,8 @@ export default function Header() {
                 onClick={() => setIsDrawerOpen(false)}
               >
                 Home
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 href={NAV_URLS.GUIDE}
                 className={`py-3 px-4 rounded-md font-medium transition-colors duration-200 ${
                   isActive(NAV_URLS.GUIDE)
@@ -214,8 +262,8 @@ export default function Header() {
                 onClick={() => setIsDrawerOpen(false)}
               >
                 Guide
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 href={NAV_URLS.TEAM}
                 className={`py-3 px-4 rounded-md font-medium transition-colors duration-200 ${
                   isActive(NAV_URLS.TEAM)
@@ -225,30 +273,34 @@ export default function Header() {
                 onClick={() => setIsDrawerOpen(false)}
               >
                 Team
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 href={NAV_URLS.RESOURCES}
                 className={`py-3 px-4 rounded-md font-medium transition-colors duration-200 ${
-                  isActive(NAV_URLS.RESOURCES)
+                  isExternalLink(NAV_URLS.RESOURCES)
+                    ? "text-foreground/70 hover:bg-muted/50 hover:text-foreground hover:border-l-4 hover:border-brand-secondary/70"
+                    : isActive(NAV_URLS.RESOURCES)
                     ? "bg-muted text-foreground border-l-4 border-brand-secondary"
                     : "text-foreground/70 hover:bg-muted/50 hover:text-foreground hover:border-l-4 hover:border-brand-secondary/70"
                 }`}
                 onClick={() => setIsDrawerOpen(false)}
               >
                 Resources
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 href={NAV_URLS.EVENTS}
                 className={`py-3 px-4 rounded-md font-medium transition-colors duration-200 ${
-                  isActive(NAV_URLS.EVENTS)
+                  isExternalLink(NAV_URLS.EVENTS)
+                    ? "text-foreground/70 hover:bg-muted/50 hover:text-foreground hover:border-l-4 hover:border-brand-secondary/70"
+                    : isActive(NAV_URLS.EVENTS)
                     ? "bg-muted text-foreground border-l-4 border-brand-secondary"
                     : "text-foreground/70 hover:bg-muted/50 hover:text-foreground hover:border-l-4 hover:border-brand-secondary/70"
                 }`}
                 onClick={() => setIsDrawerOpen(false)}
               >
                 Events
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 href={NAV_URLS.VEKI}
                 className={`py-3 px-4 rounded-md font-medium transition-colors duration-200 ${
                   isActive(NAV_URLS.VEKI)
@@ -258,9 +310,9 @@ export default function Header() {
                 onClick={() => setIsDrawerOpen(false)}
               >
                 Veki Program
-              </Link>
+              </NavLink>
               {isConnected && (
-                <Link
+                <NavLink
                   href={NAV_URLS.DASHBOARD}
                   className={`py-3 px-4 rounded-md font-medium transition-colors duration-200 ${
                     isActive(NAV_URLS.DASHBOARD)
@@ -270,7 +322,7 @@ export default function Header() {
                   onClick={() => setIsDrawerOpen(false)}
                 >
                   Dashboard
-                </Link>
+                </NavLink>
               )}
             </div>
 
