@@ -3,10 +3,10 @@ import { Bars3Icon } from "@heroicons/react/24/outline"
 import { ConnectButton } from "@rainbow-me/rainbowkit"
 import Image from "next/image"
 import Link from "next/link"
-import { useTheme } from "../providers/TailwindThemeProvider"
-import { Moon, Sun } from "lucide-react"
 import { useState } from "react"
 import { usePathname } from "next/navigation"
+import { useTheme } from "next-themes"
+import { ModeToggle } from "./ModeToggle"
 
 // Reuse footer navigation for drawer
 const socialNavigation = [
@@ -35,7 +35,7 @@ const socialNavigation = [
 ]
 
 export default function Header() {
-  const { theme, toggleTheme } = useTheme()
+  const { theme } = useTheme()
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const pathname = usePathname()
   // Helper function to check if a link is active
@@ -49,7 +49,7 @@ export default function Header() {
             {/* Mobile menu button and logo side by side */}
             <button
               onClick={() => setIsDrawerOpen(true)}
-              className="inline-flex items-center justify-center rounded-md p-2 text-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-inset focus:ring-secondary"
+              className="inline-flex items-center justify-center rounded-md p-2 text-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-secondary"
             >
               <span className="sr-only">Open main menu</span>
               <Bars3Icon className="block h-6 w-6" aria-hidden="true" />
@@ -81,8 +81,8 @@ export default function Header() {
                 href="/"
                 className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium transition-colors duration-200 ${
                   isActive("/")
-                    ? "border-secondary text-foreground"
-                    : "border-transparent text-foreground/70 hover:border-secondary/70 hover:text-foreground"
+                    ? "border-brand-secondary text-foreground"
+                    : "border-transparent text-foreground/70 hover:border-brand-secondary/70 hover:text-foreground"
                 }`}
               >
                 Home
@@ -91,8 +91,8 @@ export default function Header() {
                 href="/guide"
                 className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium transition-colors duration-200 ${
                   isActive("/guide")
-                    ? "border-secondary text-foreground"
-                    : "border-transparent text-foreground/70 hover:border-secondary/70 hover:text-foreground"
+                    ? "border-brand-secondary text-foreground"
+                    : "border-transparent text-foreground/70 hover:border-brand-secondary/70 hover:text-foreground"
                 }`}
               >
                 Guide
@@ -101,8 +101,8 @@ export default function Header() {
                 href="/veki"
                 className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium transition-colors duration-200 ${
                   isActive("/veki")
-                    ? "border-secondary text-foreground"
-                    : "border-transparent text-foreground/70 hover:border-secondary/70 hover:text-foreground"
+                    ? "border-brand-secondary text-foreground"
+                    : "border-transparent text-foreground/70 hover:border-brand-secondary/70 hover:text-foreground"
                 }`}
               >
                 Veki Program
@@ -112,17 +112,9 @@ export default function Header() {
 
           <div className="flex items-center pr-2 sm:static sm:ml-6 sm:pr-0">
             {/* Theme toggle button */}
-            <button
-              onClick={toggleTheme}
-              className="mr-3 p-2 rounded-md hover:bg-muted flex items-center justify-center"
-              aria-label="Toggle theme"
-            >
-              {theme === "dark" ? (
-                <Sun className="h-5 w-5" />
-              ) : (
-                <Moon className="h-5 w-5" />
-              )}
-            </button>
+            <div className="mr-3">
+              <ModeToggle />
+            </div>
             <ConnectButton
               showBalance={{
                 smallScreen: true,
@@ -157,8 +149,8 @@ export default function Header() {
                 href="/"
                 className={`py-3 px-4 rounded-md font-medium transition-colors duration-200 ${
                   isActive("/")
-                    ? "bg-muted text-foreground border-l-4 border-secondary"
-                    : "text-foreground/70 hover:bg-muted/50 hover:text-foreground hover:border-l-4 hover:border-secondary/70"
+                    ? "bg-muted text-foreground border-l-4 border-brand-secondary"
+                    : "text-foreground/70 hover:bg-muted/50 hover:text-foreground hover:border-l-4 hover:border-brand-secondary/70"
                 }`}
                 onClick={() => setIsDrawerOpen(false)}
               >
@@ -168,8 +160,8 @@ export default function Header() {
                 href="/guide"
                 className={`py-3 px-4 rounded-md font-medium transition-colors duration-200 ${
                   isActive("/guide")
-                    ? "bg-muted text-foreground border-l-4 border-secondary"
-                    : "text-foreground/70 hover:bg-muted/50 hover:text-foreground hover:border-l-4 hover:border-secondary/70"
+                    ? "bg-muted text-foreground border-l-4 border-brand-secondary"
+                    : "text-foreground/70 hover:bg-muted/50 hover:text-foreground hover:border-l-4 hover:border-brand-secondary/70"
                 }`}
                 onClick={() => setIsDrawerOpen(false)}
               >
@@ -179,8 +171,8 @@ export default function Header() {
                 href="/veki"
                 className={`py-3 px-4 rounded-md font-medium transition-colors duration-200 ${
                   isActive("/veki")
-                    ? "bg-muted text-foreground border-l-4 border-secondary"
-                    : "text-foreground/70 hover:bg-muted/50 hover:text-foreground hover:border-l-4 hover:border-secondary/70"
+                    ? "bg-muted text-foreground border-l-4 border-brand-secondary"
+                    : "text-foreground/70 hover:bg-muted/50 hover:text-foreground hover:border-l-4 hover:border-brand-secondary/70"
                 }`}
                 onClick={() => setIsDrawerOpen(false)}
               >

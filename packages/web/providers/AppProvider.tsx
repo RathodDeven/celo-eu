@@ -12,7 +12,7 @@ import { celo, celoAlfajores } from "wagmi/chains"
 
 import Layout from "../components/Layout"
 import { injectedWallet } from "@rainbow-me/rainbowkit/wallets"
-import ThemeProvider from "./TailwindThemeProvider"
+import { ThemeProvider } from "../components/theme-provider"
 
 const connectors = connectorsForWallets(
   [
@@ -43,7 +43,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider>
-          <ThemeProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
             <Layout>{children}</Layout>
           </ThemeProvider>
         </RainbowKitProvider>
