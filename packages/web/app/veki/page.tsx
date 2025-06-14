@@ -1,33 +1,49 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { motion, AnimatePresence } from "framer-motion"
+import { useAccount } from "wagmi"
+import { useConnectModal } from "@rainbow-me/rainbowkit"
 import {
-  useAccount,
   useReadContract,
   useWriteContract,
   useWaitForTransactionReceipt,
 } from "wagmi"
+import { useState, useEffect } from "react"
+import { AnimatePresence, motion } from "framer-motion"
+import Image from "next/image"
+
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
+
 import {
-  Check,
-  User,
-  Mail,
+  AlertCircle,
+  ArrowRight,
   AtSign,
   Award,
-  ArrowRight,
-  Loader2,
+  Bell,
+  Calendar,
+  Check,
   ExternalLink,
+  Gift,
+  Loader2,
+  Mail,
+  MessageSquare,
+  ShieldCheck,
+  User,
+  UserCircle,
+  UserPlus,
   Wallet,
+  CheckCircle,
+  PartyPopper,
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { useAuthHook } from "@/hooks/useAuth"
-import { useConnectModal } from "@rainbow-me/rainbowkit"
+
 import {
   nexusExplorerAddress,
   nexusExplorerAbi,
 } from "@/lib/abi/NexusExplorerBadge"
+import { useAuth } from "@/providers/AuthProvider"
 
 interface FormData {
   name: string
@@ -38,17 +54,27 @@ interface FormData {
 export default function VekiProgram() {
   const router = useRouter()
   const { address, isConnected } = useAccount()
-  const { isSignedIn, isLoading, signIn, error, clearError } = useAuthHook()
+  const {
+    isSignedIn,
+    isLoading,
+    signIn,
+    error,
+    clearError,
+    challengeMessage,
+    challengeSignature,
+  } = useAuth()
   const { openConnectModal } = useConnectModal()
 
   // Contract interactions
-  const { data: hasMinted } = useReadContract({
+  const { data: hasMinted, refetch: refetchHasMinted } = useReadContract({
     address: nexusExplorerAddress,
     abi: nexusExplorerAbi,
     functionName: "hasMinted",
     args: address ? [address] : undefined,
     query: {
       enabled: !!address && isConnected && isSignedIn,
+      staleTime: 0, // Ensure fresh data is fetched
+      gcTime: 0, // Minimize caching of unused data
     },
   })
 
@@ -71,14 +97,20 @@ export default function VekiProgram() {
     username: "",
     email: "",
   })
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
+  const [agreedToMarketing, setAgreedToMarketing] = useState(false)
+
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [formErrors, setFormErrors] = useState<Partial<FormData>>({})
+  const [formErrors, setFormErrors] = useState<
+    Partial<FormData & { terms: string }>
+  >({})
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(
     null
   )
-  // User existence state
   const [userExists, setUserExists] = useState<boolean | null>(null)
   const [userCheckLoading, setUserCheckLoading] = useState(false)
+  const [isUserProfileComplete, setIsUserProfileComplete] =
+    useState<boolean>(false)
 
   // Username availability check
   useEffect(() => {
@@ -92,6 +124,7 @@ export default function VekiProgram() {
           setUsernameAvailable(data.available)
         } catch (error) {
           console.error("Username check error:", error)
+          setUsernameAvailable(null)
         }
       } else {
         setUsernameAvailable(null)
@@ -102,40 +135,105 @@ export default function VekiProgram() {
     return () => clearTimeout(debounce)
   }, [formData.username])
 
-  // Check if user exists for the connected wallet
+  // Check if user exists for the connected wallet & handle step navigation
   useEffect(() => {
-    const checkUserExists = async () => {
+    const checkUserExistsAndProfile = async () => {
       if (address && isConnected && isSignedIn) {
+        if (hasMinted === true) {
+          // If user has minted, they are redirected by the top-level `if (hasMinted)` block.
+          return
+        }
+
         setUserCheckLoading(true)
         try {
           const res = await fetch(`/api/users/exists?address=${address}`)
+          if (!res.ok) {
+            console.error("API error checking user existence:", res.status)
+            setUserExists(false)
+            setIsUserProfileComplete(false)
+            setCurrentStep(1) // Default to registration on API error
+            return
+          }
           const data = await res.json()
-          setUserExists(!!data.exists)
-          // If user exists and badge is not minted, go to step 2
-          if (data.exists && !hasMinted) {
-            setCurrentStep(2)
+          setUserExists(data.exists)
+
+          if (data.exists && data.user) {
+            const { name, username, email } = data.user
+            // Also populate formData if user exists and details are present
+            if (name) setFormData((prev) => ({ ...prev, name }))
+            if (username) setFormData((prev) => ({ ...prev, username }))
+            if (email) setFormData((prev) => ({ ...prev, email }))
+
+            const profileComplete = !!(name && username && email)
+            setIsUserProfileComplete(profileComplete)
+
+            if (profileComplete) {
+              // User exists and profile is complete, check mint status
+              await refetchHasMinted()
+              setCurrentStep(2) // Proceed to minting step
+            } else {
+              // User exists but profile is incomplete
+              setCurrentStep(1)
+            }
+          } else {
+            // User does not exist
+            setIsUserProfileComplete(false)
+            setCurrentStep(1)
           }
         } catch (e) {
+          console.error("Error checking user existence:", e)
           setUserExists(null)
+          setIsUserProfileComplete(false)
+          setCurrentStep(1) // Fallback to step 1 on error
         } finally {
           setUserCheckLoading(false)
         }
       } else {
+        // Not connected or not signed in, reset to default state
         setUserExists(null)
+        setIsUserProfileComplete(false)
+        setCurrentStep(1)
       }
     }
-    checkUserExists()
-    // Only re-run when address, isConnected, isSignedIn, or hasMinted changes
-  }, [address, isConnected, isSignedIn, hasMinted])
+
+    checkUserExistsAndProfile()
+  }, [address, isConnected, isSignedIn, refetchHasMinted, hasMinted])
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
     setFormErrors({})
 
+    // Client-side checks for critical authentication data
+    if (!address) {
+      console.error("Form submission error: Wallet address is missing.")
+      setFormErrors({
+        terms: "Wallet address is not available. Please reconnect.",
+      })
+      setIsSubmitting(false)
+      return
+    }
+    if (!challengeMessage) {
+      console.error("Form submission error: Challenge message is missing.")
+      setFormErrors({
+        terms:
+          "Authentication challenge is missing. Please try signing in again.",
+      })
+      setIsSubmitting(false)
+      return
+    }
+    if (!challengeSignature) {
+      console.error("Form submission error: Challenge signature is missing.")
+      setFormErrors({
+        terms:
+          "Authentication signature is missing. Please try signing in again.",
+      })
+      setIsSubmitting(false)
+      return
+    }
+
     try {
-      // Validate form
-      const errors: Partial<FormData> = {}
+      const errors: Partial<FormData & { terms: string }> = {}
       if (!formData.name.trim()) errors.name = "Name is required"
       if (!formData.username.trim()) errors.username = "Username is required"
       if (formData.username.length < 3)
@@ -143,6 +241,9 @@ export default function VekiProgram() {
       if (!formData.email.trim()) errors.email = "Email is required"
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
         errors.email = "Invalid email format"
+      if (!agreedToTerms) {
+        errors.terms = "You must accept the Terms and Conditions"
+      }
 
       if (Object.keys(errors).length > 0) {
         setFormErrors(errors)
@@ -150,29 +251,46 @@ export default function VekiProgram() {
         return
       }
 
-      if (!usernameAvailable) {
+      if (usernameAvailable === false) {
         setFormErrors({ username: "Username is not available" })
         setIsSubmitting(false)
         return
       }
+      if (usernameAvailable === null && formData.username.length >= 3) {
+        setFormErrors({
+          username:
+            "Username availability check in progress or failed. Please try again.",
+        })
+        setIsSubmitting(false)
+        return
+      }
 
-      // Save user data
+      const payload = {
+        message: {
+          address, // Inner address for the message payload
+          ...formData,
+          agreedToMarketing,
+        },
+        signature: challengeSignature,
+        originalChallenge: challengeMessage,
+        address: address, // Outer address for middleware verification
+      }
+
+      console.log("Submitting to /api/users with payload:", payload) // Log the payload
+
       const response = await fetch("/api/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          address,
-          ...formData,
-        }),
+        body: JSON.stringify(payload),
       })
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || "Failed to save user data")
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to save user data")
       }
-
-      // Move to next step
-      setCurrentStep(2)
+      setUserExists(true) // User is now created/updated
+      setIsUserProfileComplete(true) // Profile is now complete
+      setCurrentStep(2) // Move to next step (minting)
     } catch (error: any) {
       console.error("Form submission error:", error)
       setFormErrors({ email: error.message || "Something went wrong" })
@@ -191,18 +309,11 @@ export default function VekiProgram() {
     })
   }
 
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      },
-    },
+  const stepVariants = {
+    hidden: { opacity: 0, x: 100 },
+    visible: { opacity: 1, x: 0 },
+    exit: { opacity: 0, x: -100 },
   }
-
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: {
@@ -212,12 +323,6 @@ export default function VekiProgram() {
     },
   }
 
-  const stepVariants = {
-    hidden: { opacity: 0, x: 100 },
-    visible: { opacity: 1, x: 0 },
-    exit: { opacity: 0, x: -100 },
-  }
-  // Show connect wallet screen
   if (!isConnected) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-card">
@@ -240,7 +345,7 @@ export default function VekiProgram() {
           <p className="text-muted-foreground mb-8">
             Connect your wallet to access the Veki Program and claim your
             Explorer Badge.
-          </p>{" "}
+          </p>
           <Button
             title="Connect Wallet"
             onClick={() => openConnectModal?.()}
@@ -255,7 +360,6 @@ export default function VekiProgram() {
     )
   }
 
-  // Show sign in screen
   if (!isSignedIn) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-card">
@@ -278,7 +382,7 @@ export default function VekiProgram() {
           <p className="text-muted-foreground mb-8">
             Please sign the message to verify your wallet ownership and access
             the Veki Program.
-          </p>{" "}
+          </p>
           <Button
             title={isLoading ? "Signing In..." : "Sign In"}
             onClick={() => {
@@ -286,20 +390,16 @@ export default function VekiProgram() {
               signIn()
             }}
             disabled={isLoading}
+            loading={isLoading}
             size="lg"
             className="w-full bg-primary text-primary-foreground shadow hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Signing In...
-              </>
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
             ) : (
-              <>
-                <User className="mr-2 h-5 w-5" />
-                Sign In
-              </>
+              <User className="mr-2 h-5 w-5" />
             )}
+            {isLoading ? "Signing In..." : "Sign In"}
           </Button>
           {error && (
             <motion.div
@@ -314,114 +414,68 @@ export default function VekiProgram() {
       </div>
     )
   }
-  // Show badge already owned screen
-  if (hasMinted) {
+
+  if (hasMinted || isConfirmed) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-brand-primary/5 to-background">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="text-center p-8 max-w-lg mx-auto"
+          className="text-center p-8 max-w-lg mx-auto bg-card shadow-xl rounded-xl"
         >
-          {/* Animated success indicator */}
           <motion.div
-            initial={{ scale: 0, rotate: -180 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ delay: 0.2, type: "spring", duration: 0.8 }}
-            className="relative mb-8"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: "spring" }}
+            className="w-24 h-24 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6 ring-4 ring-green-500/20"
           >
-            <div className="w-24 h-24 bg-gradient-to-br from-emerald-500 to-green-600 rounded-full flex items-center justify-center mx-auto shadow-lg">
-              <Award className="text-white" size={40} />
-            </div>
-            {/* Celebration particles */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              {[...Array(8)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ scale: 0, x: 0, y: 0 }}
-                  animate={{
-                    scale: [0, 1, 0],
-                    x: [0, Math.cos((i * 45 * Math.PI) / 180) * 60],
-                    y: [0, Math.sin((i * 45 * Math.PI) / 180) * 60],
-                  }}
-                  transition={{ delay: 0.8 + i * 0.1, duration: 1.5 }}
-                  className="absolute w-2 h-2 bg-yellow-400 rounded-full"
-                />
-              ))}
-            </div>
+            <PartyPopper className="text-green-500" size={48} />
           </motion.div>
-
-          <motion.div
+          <h1 className="text-4xl font-bold text-foreground mb-4">
+            Congratulations!
+          </h1>
+          <p className="text-muted-foreground text-lg mb-8">
+            You've successfully minted your Nexus Explorer Badge! Welcome to the
+            Celo Europe Guild.
+          </p>
+          <motion.img
+            src="/explorer badge.png" // Make sure this path is correct
+            alt="Nexus Explorer Badge"
+            className="w-48 h-48 mx-auto mb-8 rounded-lg shadow-md"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-          >
-            <h1 className="text-4xl font-bold text-foreground mb-4">
-              🎉 Congratulations!
-            </h1>
-            <p className="text-lg text-muted-foreground mb-8">
-              You're officially part of the{" "}
-              <span className="text-brand-primary font-semibold">
-                Celo Europe
-              </span>{" "}
-              community! Your Explorer Badge proves your commitment to building
-              a regenerative future.
-            </p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="mb-8"
-          >
-            <div className="relative">
-              <img
-                src="/explorer badge.png"
-                alt="Explorer Badge"
-                className="w-40 h-40 mx-auto rounded-xl shadow-xl border-4 border-gradient-to-r from-emerald-400 to-green-500"
-              />
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 1, type: "spring" }}
-                className="absolute -top-2 -right-2 w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center"
-              >
-                <Check className="text-white" size={16} />
-              </motion.div>
-            </div>
-            <p className="text-sm text-muted-foreground mt-4 font-medium">
-              Explorer Badge NFT • Owned by you
-            </p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-            className="space-y-4"
-          >
+          />
+          <div className="space-y-4">
             <Button
-              title="Access Cel'EU Dashboard"
+              title="Go to Dashboard"
               onClick={() => router.push("/dashboard")}
+              className="w-full"
+              variant="default"
               size="lg"
-              className="w-full bg-brand-primary text-white shadow-lg hover:bg-brand-primary/90 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 transition-all duration-200"
             >
-              <ExternalLink className="mr-2 h-5 w-5" />
-              Access Cel'EU Dashboard
+              <ArrowRight className="mr-2" /> Go to Dashboard
             </Button>
-
-            <p className="text-xs text-muted-foreground">
-              Explore exclusive resources, events, and opportunities in the Celo
-              ecosystem
-            </p>
-          </motion.div>
+            <Button
+              title="View Badge on Explorer"
+              variant="outline"
+              onClick={() =>
+                window.open(
+                  `https://explorer.celo.org/address/${nexusExplorerAddress}`,
+                  "_blank"
+                )
+              }
+              className="w-full"
+              size="lg"
+            >
+              <ExternalLink className="mr-2" /> View Badge on Explorer
+            </Button>
+          </div>
         </motion.div>
       </div>
     )
   }
 
-  // In the return, add a loading state for user check
   if (userCheckLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -436,7 +490,6 @@ export default function VekiProgram() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-card/50 to-background">
       <div className="container mx-auto px-4 py-12 max-w-4xl">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -452,7 +505,6 @@ export default function VekiProgram() {
           </p>
         </motion.div>
 
-        {/* Step Indicator */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -494,326 +546,411 @@ export default function VekiProgram() {
             ))}
           </div>
         </motion.div>
-
-        {/* Step Content */}
         <AnimatePresence mode="wait">
-          {currentStep === 1 && (
+          {currentStep === 1 && ( // Show step 1 if currentStep is 1 (logic handled by useEffect)
             <motion.div
               key="step1"
               variants={stepVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
-              transition={{ duration: 0.3 }}
-              className="max-w-md mx-auto"
+              className="bg-card p-4 md:p-8 rounded-xl shadow-2xl mx-auto md:max-w-3xl"
             >
-              <motion.div
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                className="bg-card border rounded-xl p-8 shadow-lg"
-              >
-                <motion.div
-                  variants={itemVariants}
-                  className="text-center mb-6"
-                >
-                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <User className="text-primary" size={24} />
-                  </div>
-                  <h2 className="text-2xl font-bold text-foreground mb-2">
-                    Create Your Profile
-                  </h2>
-                  <p className="text-muted-foreground">
-                    Tell us about yourself to get started
-                  </p>
-                </motion.div>
-
-                <form onSubmit={handleFormSubmit} className="space-y-6">
-                  <motion.div variants={itemVariants}>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Full Name
-                    </label>
+              <h2 className="text-2xl font-semibold text-foreground mb-6 text-center">
+                Create Your Veki Profile
+              </h2>
+              <form onSubmit={handleFormSubmit} className="space-y-6">
+                <div>
+                  <Label
+                    htmlFor="name"
+                    className="block text-sm font-medium text-foreground"
+                  >
+                    Full Name
+                  </Label>
+                  <div className="mt-1 relative rounded-md shadow-sm">
+                    <UserCircle className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <Input
+                      id="name"
                       type="text"
-                      placeholder="Enter your full name"
                       value={formData.name}
                       onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          name: e.target.value,
-                        }))
+                        setFormData({ ...formData, name: e.target.value })
                       }
-                      className={formErrors.name ? "border-destructive" : ""}
+                      placeholder="John Doe"
+                      className="pl-10 w-full"
+                      disabled={isSubmitting}
                     />
-                    {formErrors.name && (
-                      <p className="text-destructive text-sm mt-1">
-                        {formErrors.name}
-                      </p>
-                    )}
-                  </motion.div>
-                  <motion.div variants={itemVariants}>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Username
-                    </label>
-                    <div className="relative">
-                      <AtSign
-                        className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
-                        size={16}
-                      />
-                      <Input
-                        type="text"
-                        placeholder="Choose a unique username"
-                        value={formData.username}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            username: e.target.value,
-                          }))
-                        }
-                        className={`pl-10 ${
-                          formErrors.username
-                            ? "border-destructive"
-                            : usernameAvailable === false
-                            ? "border-destructive"
-                            : usernameAvailable === true
-                            ? "border-green-500"
-                            : ""
-                        }`}
-                      />
-                      {formData.username.length >= 3 && (
-                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                          {usernameAvailable === null ? (
-                            <Loader2
-                              className="animate-spin text-muted-foreground"
-                              size={16}
-                            />
-                          ) : usernameAvailable ? (
-                            <Check className="text-green-500" size={16} />
-                          ) : (
-                            <span className="text-destructive text-sm">✕</span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    {formErrors.username && (
-                      <p className="text-destructive text-sm mt-1">
-                        {formErrors.username}
-                      </p>
-                    )}
-                    {usernameAvailable === false && (
-                      <p className="text-destructive text-sm mt-1">
-                        Username is already taken
-                      </p>
-                    )}
-                  </motion.div>
-                  <motion.div variants={itemVariants}>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Email Address
-                    </label>
-                    <div className="relative">
-                      <Mail
-                        className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
-                        size={16}
-                      />
-                      <Input
-                        type="email"
-                        placeholder="your.email@example.com"
-                        value={formData.email}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            email: e.target.value,
-                          }))
-                        }
-                        className={`pl-10 ${
-                          formErrors.email ? "border-destructive" : ""
-                        }`}
-                      />
-                    </div>
-                    {formErrors.email && (
-                      <p className="text-destructive text-sm mt-1">
-                        {formErrors.email}
-                      </p>
-                    )}
-                  </motion.div>{" "}
-                  <motion.div variants={itemVariants}>
-                    <Button
-                      type="submit"
-                      title={
-                        isSubmitting ? "Saving..." : "Continue to Badge Claim"
+                  </div>
+                  {formErrors.name && (
+                    <p className="mt-1 text-xs text-destructive">
+                      {formErrors.name}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <Label
+                    htmlFor="username"
+                    className="block text-sm font-medium text-foreground"
+                  >
+                    Username
+                  </Label>
+                  <div className="mt-1 relative rounded-md shadow-sm">
+                    <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input
+                      id="username"
+                      type="text"
+                      value={formData.username}
+                      onChange={(e) =>
+                        setFormData({ ...formData, username: e.target.value })
                       }
-                      onClick={() => {}}
-                      disabled={isSubmitting || !usernameAvailable}
-                      className="w-full bg-primary text-primary-foreground shadow hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Saving...
-                        </>
-                      ) : (
-                        <>
-                          Continue to Badge Claim
-                          <ArrowRight className="ml-2 h-4 w-4" />
-                        </>
+                      placeholder="johndoe"
+                      className="pl-10 w-full"
+                      disabled={isSubmitting}
+                    />
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                      {formData.username.length >= 3 &&
+                        usernameAvailable === true && (
+                          <Check className="h-5 w-5 text-green-500" />
+                        )}
+                      {formData.username.length >= 3 &&
+                        usernameAvailable === false && (
+                          <AlertCircle className="h-5 w-5 text-destructive" />
+                        )}
+                    </div>
+                  </div>
+                  {formErrors.username && (
+                    <p className="mt-1 text-xs text-destructive">
+                      {formErrors.username}
+                    </p>
+                  )}
+                  {formData.username.length >= 3 &&
+                    usernameAvailable === true && (
+                      <p className="mt-1 text-xs text-green-600">
+                        Username available!
+                      </p>
+                    )}
+                  {formData.username.length >= 3 &&
+                    usernameAvailable === false && (
+                      <p className="mt-1 text-xs text-destructive">
+                        Username taken.
+                      </p>
+                    )}
+                </div>
+
+                <div>
+                  <Label
+                    htmlFor="email"
+                    className="block text-sm font-medium text-foreground"
+                  >
+                    Email Address
+                  </Label>
+                  <div className="mt-1 relative rounded-md shadow-sm">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) =>
+                        setFormData({ ...formData, email: e.target.value })
+                      }
+                      placeholder="you@example.com"
+                      className="pl-10 w-full"
+                      disabled={isSubmitting}
+                    />
+                  </div>
+                  {formErrors.email && (
+                    <p className="mt-1 text-xs text-destructive">
+                      {formErrors.email}
+                    </p>
+                  )}
+                </div>
+
+                <motion.div variants={itemVariants} className="space-y-4">
+                  <div className="flex items-start space-x-3">
+                    <Checkbox
+                      id="terms"
+                      checked={agreedToTerms}
+                      onCheckedChange={(checked) =>
+                        setAgreedToTerms(Boolean(checked))
+                      }
+                      disabled={isSubmitting}
+                      className="mt-0.5"
+                    />
+                    <div className="grid gap-1.5 leading-none">
+                      <Label
+                        htmlFor="terms"
+                        className="text-sm font-medium text-foreground leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        I agree to the{" "}
+                        <a
+                          href="/terms"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="underline text-primary hover:text-primary/80"
+                        >
+                          Terms and Conditions
+                        </a>
+                      </Label>
+                      {formErrors.terms && (
+                        <p className="text-xs text-destructive">
+                          {formErrors.terms}
+                        </p>
                       )}
-                    </Button>
-                  </motion.div>
-                </form>
-              </motion.div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-3">
+                    <Checkbox
+                      id="marketing"
+                      checked={agreedToMarketing}
+                      onCheckedChange={(checked) =>
+                        setAgreedToMarketing(Boolean(checked))
+                      }
+                      disabled={isSubmitting}
+                      className="mt-0.5"
+                    />
+                    <Label
+                      htmlFor="marketing"
+                      className="text-sm font-medium text-foreground leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      I agree to receive marketing emails (optional)
+                    </Label>
+                  </div>
+                </motion.div>
+
+                <motion.div variants={itemVariants}>
+                  <Button
+                    type="submit"
+                    title="Create Account & Proceed"
+                    onClick={() => {}} // Required prop, form submission handled by type="submit"
+                    disabled={
+                      isSubmitting ||
+                      (formData.username.length >= 3 &&
+                        usernameAvailable === null) ||
+                      usernameAvailable === false ||
+                      !agreedToTerms
+                    }
+                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-ring"
+                    size="lg"
+                  >
+                    {isSubmitting ? (
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    ) : (
+                      <UserPlus className="mr-2 h-5 w-5" />
+                    )}
+                    {isSubmitting
+                      ? "Creating Account..."
+                      : "Create Account & Proceed"}
+                  </Button>
+                </motion.div>
+              </form>
             </motion.div>
           )}
-
-          {currentStep === 2 && (
+          {currentStep === 2 && ( // Show step 2 if currentStep is 2
             <motion.div
               key="step2"
               variants={stepVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
-              transition={{ duration: 0.3 }}
-              className="max-w-md mx-auto"
+              className="bg-gradient-to-br from-background to-card border border-border p-4 md:p-8 rounded-xl shadow-2xl mx-auto md:max-w-3xl"
             >
-              {!isConfirmed ? (
-                <motion.div
-                  variants={containerVariants}
-                  initial="hidden"
-                  animate="visible"
-                  className="bg-card border rounded-xl p-8 shadow-lg text-center"
-                >
-                  <motion.div variants={itemVariants} className="mb-6">
-                    <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Award className="text-primary" size={32} />
-                    </div>
-                    <h2 className="text-2xl font-bold text-foreground mb-2">
-                      Claim Your Explorer Badge
-                    </h2>
-                    <p className="text-muted-foreground">
-                      Mint your unique NFT badge to join the Celo Europe
-                      community
-                    </p>
-                  </motion.div>
-                  <motion.div variants={itemVariants} className="mb-6">
-                    <img
-                      src="/explorer badge.png"
-                      alt="Explorer Badge"
-                      className="w-32 h-32 mx-auto rounded-lg shadow-md"
-                    />
-                  </motion.div>{" "}
-                  <motion.div variants={itemVariants}>
-                    <Button
-                      title={
-                        isMinting || isConfirming
-                          ? isMinting
-                            ? "Confirming Transaction..."
-                            : "Minting Badge..."
-                          : "Claim Explorer Badge"
-                      }
-                      onClick={handleMintBadge}
-                      disabled={isMinting || isConfirming}
-                      className="w-full bg-brand-primary text-white shadow-lg hover:bg-brand-primary/90 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                      size="lg"
-                    >
-                      {isMinting || isConfirming ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          {isMinting
-                            ? "Confirming Transaction..."
-                            : "Minting Badge..."}
-                        </>
-                      ) : (
-                        <>
-                          Claim Explorer Badge
-                          <Award className="ml-2 h-4 w-4" />
-                        </>
-                      )}
-                    </Button>
-
-                    {mintError && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg"
-                      >
-                        <p className="text-destructive text-sm">
-                          {mintError.message ||
-                            "Failed to mint badge. Please try again."}
-                        </p>
-                      </motion.div>
-                    )}
-                  </motion.div>
-                </motion.div>
-              ) : (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.5 }}
-                  className="bg-card border rounded-xl p-8 shadow-lg text-center"
-                >
+              <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-8">
+                <div className="flex-1 text-left">
+                  <motion.h2
+                    variants={itemVariants}
+                    className="text-3xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-brand-primary to-brand-secondary"
+                  >
+                    Claim Your Explorer Badge
+                  </motion.h2>
+                  <motion.p
+                    variants={itemVariants}
+                    className="text-muted-foreground mb-6"
+                  >
+                    You're one step away! Mint your exclusive Nexus Explorer
+                    Badge NFT to mark your entry into the Celo Europe ecosystem.
+                  </motion.p>
                   <motion.div
+                    variants={itemVariants}
+                    className="flex items-center gap-2 text-sm bg-primary/10 text-primary p-3 rounded-lg mb-4"
+                  >
+                    <Bell className="h-4 w-4" />
+                    <span>
+                      A small network fee is required for this transaction on
+                      Celo.
+                    </span>
+                  </motion.div>
+                </div>
+
+                <motion.div
+                  variants={itemVariants}
+                  className="relative w-48 h-48 flex-shrink-0"
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-brand-primary/20 to-brand-secondary/20 rounded-full blur-xl"></div>
+                  <Image
+                    src="/explorer badge.png"
+                    alt="Explorer Badge"
+                    width={180}
+                    height={180}
+                    className="relative z-10 rounded-full border-4 border-brand-secondary shadow-xl object-cover"
+                  />
+                  <motion.div
+                    className="absolute -bottom-2 -right-2 bg-brand-secondary text-white rounded-full p-2 shadow-lg z-20"
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                    className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4"
+                    transition={{ delay: 0.4, type: "spring", stiffness: 500 }}
                   >
-                    <Check className="text-green-500" size={32} />
+                    <Award size={24} />
                   </motion.div>
-                  <h2 className="text-2xl font-bold text-foreground mb-2">
-                    Explorer Badge Collected!
-                  </h2>
-                  <p className="text-muted-foreground mb-6">
-                    Welcome to the Celo Europe community. Your journey begins
-                    now.
-                  </p>
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
-                    className="mb-6"
-                  >
-                    <img
-                      src="/explorer badge.png"
-                      alt="Explorer Badge"
-                      className="w-32 h-32 mx-auto rounded-lg shadow-md border-2 border-green-500/20"
-                    />
-                  </motion.div>{" "}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6 }}
-                  >
-                    <Button
-                      title="Access My Cel'EU Dashboard"
-                      onClick={() => router.push("/dashboard")}
-                      className="w-full bg-brand-primary text-white shadow-lg hover:bg-brand-primary/90 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 transition-all duration-200"
-                      size="lg"
-                    >
-                      Access My Cel'EU Dashboard
-                      <ExternalLink className="ml-2 h-4 w-4" />
-                    </Button>
-                  </motion.div>
-                  {hash && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.8 }}
-                      className="mt-4"
-                    >
-                      <p className="text-xs text-muted-foreground">
-                        Transaction:{" "}
-                        <a
-                          href={`https://celoscan.io/tx/${hash}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary hover:underline"
-                        >
-                          View on Celoscan
-                        </a>
-                      </p>
-                    </motion.div>
-                  )}
+                </motion.div>
+              </div>
+              {mintError && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg flex items-start gap-2"
+                >
+                  <AlertCircle className="text-destructive h-5 w-5 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-destructive font-medium">
+                      Error minting badge
+                    </p>
+                    <p className="text-sm text-destructive/80">
+                      {mintError?.message?.includes("User rejected the request")
+                        ? "Transaction rejected by user. Please try again."
+                        : mintError?.message?.slice(0, 100) + "..." ||
+                          "Transaction failed. Please try again."}
+                    </p>
+                  </div>
                 </motion.div>
               )}
+
+              <motion.div
+                variants={itemVariants}
+                className="bg-card/50 backdrop-blur-sm border border-border rounded-lg p-6 mb-6"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <Gift className="text-brand-primary h-6 w-6" />
+                    <h3 className="text-lg font-semibold text-foreground">
+                      Explorer Badge Details
+                    </h3>
+                  </div>
+                  <div className="bg-brand-primary/10 px-3 py-1 rounded-full">
+                    <span className="text-xs font-medium text-brand-primary">
+                      NFT
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <MessageSquare className="text-brand-secondary h-5 w-5 mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-muted-foreground">
+                      This unique NFT signifies your entry into the Celo Europe
+                      Veki Program.
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Calendar className="text-brand-secondary h-5 w-5 mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-muted-foreground">
+                      Minted on:{" "}
+                      {isConfirmed
+                        ? new Date().toLocaleDateString()
+                        : "Not minted yet"}
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <ShieldCheck className="text-brand-secondary h-5 w-5 mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-muted-foreground">
+                      Verifiably owned by your connected wallet address.
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+
+              <motion.div variants={itemVariants} className="relative">
+                {(isMinting || isConfirming) && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-card/80 backdrop-blur-sm rounded-xl z-10">
+                    <div className="flex flex-col items-center gap-4 p-6 bg-background/90 rounded-xl shadow-lg border border-primary/20">
+                      <Loader2
+                        className="animate-spin text-primary"
+                        size={48}
+                      />
+                      <p className="text-lg font-medium text-foreground">
+                        {isMinting
+                          ? "Minting Badge..."
+                          : "Confirming Transaction..."}
+                      </p>
+                      <p className="text-sm text-muted-foreground text-center">
+                        Please wait, this may take a few moments. Do not close
+                        or refresh the page.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <div
+                  className={`bg-gradient-to-br from-background to-card/60 p-6 rounded-xl border border-border ${
+                    isMinting || isConfirming
+                      ? "blur-sm pointer-events-none"
+                      : ""
+                  }`}
+                >
+                  <div className="grid gap-4 mb-6">
+                    <div className="flex items-center justify-between py-2 border-b border-border/40">
+                      <span className="text-muted-foreground">Status</span>
+                      <span className="font-semibold text-foreground">
+                        Ready to Mint
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between py-2 border-b border-border/40">
+                      <span className="text-muted-foreground">Network</span>
+                      <span className="font-semibold text-foreground">
+                        Celo
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between py-2 border-b border-border/40">
+                      <span className="text-muted-foreground">Cost</span>
+                      <span className="font-semibold text-foreground">
+                        Free
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between py-2">
+                      <span className="text-muted-foreground">Wallet</span>
+                      <span
+                        className="font-semibold text-foreground truncate max-w-[150px] md:max-w-xs"
+                        title={address || ""}
+                      >
+                        {address
+                          ? `${address.substring(0, 6)}...${address.substring(
+                              address.length - 4
+                            )}`
+                          : "N/A"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <Button
+                    title="Mint Your Explorer Badge"
+                    onClick={handleMintBadge}
+                    disabled={isMinting || isConfirming}
+                    className="w-full bg-gradient-to-r from-brand-primary to-brand-secondary text-white hover:opacity-90 focus:ring-ring shadow-lg"
+                    size="lg"
+                  >
+                    <Award className="mr-2 h-5 w-5" />
+                    {isMinting
+                      ? "Processing..."
+                      : isConfirming
+                      ? "Confirming..."
+                      : "Mint Your Explorer Badge"}
+                  </Button>
+                </div>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>

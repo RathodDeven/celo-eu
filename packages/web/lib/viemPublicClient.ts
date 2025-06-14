@@ -1,5 +1,5 @@
 import { createPublicClient, http } from "viem"
-import { celoAlfajores, mainnet } from "viem/chains"
+import { celoAlfajores, mainnet, celo } from "viem/chains"
 
 export const viemPublicClientEth = createPublicClient({
   chain: mainnet,
@@ -8,5 +8,10 @@ export const viemPublicClientEth = createPublicClient({
 
 export const viemPublicClientAlfajores = createPublicClient({
   chain: celoAlfajores,
+  transport: http(),
+})
+
+export const viemPublicClientCelo = createPublicClient({
+  chain: celo,
   transport: http(),
 })

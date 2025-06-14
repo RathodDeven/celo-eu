@@ -7,6 +7,7 @@ export interface IUser extends Document {
   name?: string
   profile_picture_url?: string
   emoji_url?: string
+  agreedToMarketing?: boolean // Added field
   challenge?: {
     message: string
     timestamp: number
@@ -31,7 +32,7 @@ const UserSchema: Schema = new Schema(
     },
     username: {
       type: String,
-      unique: true,
+      unique: true, // This already creates an index
       sparse: true, // Allow multiple null values but unique non-null values
       minlength: 3,
       maxlength: 30,
@@ -54,6 +55,11 @@ const UserSchema: Schema = new Schema(
     name: {
       type: String,
       maxlength: 100,
+    },
+    agreedToMarketing: {
+      // Added field
+      type: Boolean,
+      default: false,
     },
     profile_picture_url: {
       type: String,
@@ -82,8 +88,5 @@ const UserSchema: Schema = new Schema(
     timestamps: { createdAt: "created_at", updatedAt: "updated_at" },
   }
 )
-
-// Index for faster lookups (address already has unique index from schema)
-UserSchema.index({ username: 1 })
 
 export default mongoose.models.User || mongoose.model<IUser>("User", UserSchema)
