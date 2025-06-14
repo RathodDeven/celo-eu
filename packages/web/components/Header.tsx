@@ -5,7 +5,6 @@ import Image from "next/image"
 import Link from "next/link"
 import { useState } from "react"
 import { usePathname } from "next/navigation"
-import { useTheme } from "next-themes"
 import { ModeToggle } from "./ModeToggle"
 import { NAV_URLS, SOCIAL_URLS } from "@/lib/config"
 import { useAccount } from "wagmi"
@@ -40,7 +39,6 @@ const socialNavigation = [
 const isExternalLink = (url: string) => url.startsWith("http")
 
 export default function Header() {
-  const { theme } = useTheme()
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const pathname = usePathname()
 
@@ -213,8 +211,8 @@ export default function Header() {
             </div>
             <ConnectButton
               showBalance={{
-                smallScreen: true,
-                largeScreen: false,
+                smallScreen: false,
+                largeScreen: true,
               }}
             />
           </div>

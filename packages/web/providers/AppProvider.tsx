@@ -1,18 +1,14 @@
 "use client"
 
 import "@rainbow-me/rainbowkit/styles.css"
-
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import {
-  RainbowKitProvider,
-  connectorsForWallets,
-} from "@rainbow-me/rainbowkit"
+import { connectorsForWallets } from "@rainbow-me/rainbowkit"
 import { WagmiProvider, createConfig, http } from "wagmi"
-import { celo, celoAlfajores } from "wagmi/chains"
-
+import { celoAlfajores } from "wagmi/chains"
 import Layout from "../components/Layout"
 import { injectedWallet } from "@rainbow-me/rainbowkit/wallets"
 import { ThemeProvider } from "../components/theme-provider"
+import RainbowKitWrapper from "./RainbowKitWrapper"
 
 const connectors = connectorsForWallets(
   [
@@ -31,7 +27,6 @@ const config = createConfig({
   connectors,
   chains: [celoAlfajores],
   transports: {
-    // [celo.id]: http(),
     [celoAlfajores.id]: http(),
   },
 })
@@ -42,16 +37,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <RainbowKitWrapper>
             <Layout>{children}</Layout>
-          </ThemeProvider>
-        </RainbowKitProvider>
+          </RainbowKitWrapper>
+        </ThemeProvider>
       </QueryClientProvider>
     </WagmiProvider>
   )
