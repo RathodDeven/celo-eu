@@ -23,6 +23,7 @@ import {
 import { useAccount, useReadContract } from "wagmi"
 import { useConnectModal } from "@rainbow-me/rainbowkit"
 import { celoAlfajores } from "viem/chains"
+import { useAuth } from "@/providers/AuthProvider"
 
 export default function Home() {
   const [isCheckingBadge, setIsCheckingBadge] = useState(false)
@@ -30,6 +31,15 @@ export default function Home() {
   const router = useRouter()
   const { address, isConnected } = useAccount()
   const { openConnectModal } = useConnectModal()
+
+  // Using our custom auth hook
+  const {
+    isSignedIn,
+    isLoading: isSigningIn,
+    signIn,
+    error: signInError,
+    clearError,
+  } = useAuth()
 
   // Use Wagmi's useReadContract hook to efficiently check for NFT ownership
   const { data: userTokenIds, isLoading: isLoadingTokens } = useReadContract({
@@ -39,7 +49,7 @@ export default function Home() {
     args: address ? [address] : undefined,
     chainId: celoAlfajores.id,
     query: {
-      enabled: !!address && isConnected,
+      enabled: !!address && isConnected && isSignedIn,
     },
   })
 
@@ -47,11 +57,17 @@ export default function Home() {
   const hasExplorerBadge = userTokenIds
     ? (userTokenIds as bigint[]).length > 0
     : false
-
   const handleButtonClick = async () => {
     if (!isConnected || !address) {
       // Open RainbowKit connect modal if wallet is not connected
       openConnectModal?.()
+      return
+    }
+
+    if (!isSignedIn) {
+      // Sign in if not signed in
+      clearError()
+      await signIn()
       return
     }
 
@@ -73,10 +89,10 @@ export default function Home() {
       setIsCheckingBadge(false)
     }
   }
-
   // Determine button text based on connection and badge status
   const getButtonText = () => {
     if (!isConnected) return "Connect to Start"
+    if (!isSignedIn) return "Sign In to Continue"
     if (isLoadingTokens) return "Checking Badge..."
     return hasExplorerBadge ? "Access Dashboard" : "Join the Veki Program"
   }
@@ -84,6 +100,7 @@ export default function Home() {
   // Determine button icon based on connection and badge status
   const getButtonIcon = () => {
     if (!isConnected) return <Wallet size={18} />
+    if (!isSignedIn) return <Wallet size={18} />
     if (hasExplorerBadge) return <Award size={18} />
     return <Zap size={18} />
   }
@@ -131,9 +148,8 @@ export default function Home() {
       },
     },
   }
-
   // Show loading indicator while checking token data
-  if (isConnected && isLoadingTokens) {
+  if (isConnected && isSignedIn && isLoadingTokens) {
     return (
       <div className="h-screen flex justify-center items-center bg-gradient-to-b from-brand-primary to-background">
         <motion.div
@@ -184,22 +200,19 @@ export default function Home() {
                 <Award size={24} />
               </motion.div>
             </motion.div>
-
             <motion.h1
               variants={fadeIn}
               className="text-4xl md:text-5xl font-bold mb-4 text-foreground bg-clip-text bg-gradient-to-r from-brand-primary to-brand-secondary"
             >
               Accelerating Celo in Europe
             </motion.h1>
-
             <motion.p
               variants={fadeIn}
               className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-8"
             >
               #CeloEU supports mission-driven entrepreneurs and creators to
               build lasting solutions that leverage the Celo ecosystem.
-            </motion.p>
-
+            </motion.p>{" "}
             <motion.div
               variants={fadeIn}
               whileHover={{ scale: 1.05 }}
@@ -207,14 +220,14 @@ export default function Home() {
             >
               <button
                 onClick={handleButtonClick}
-                disabled={isCheckingBadge}
+                disabled={isCheckingBadge || isSigningIn}
                 className="relative overflow-hidden rounded-full bg-gradient-to-r from-brand-primary to-brand-secondary px-8 py-3 text-base font-semibold text-white shadow-lg group disabled:opacity-70"
               >
                 <span className="relative z-10 flex items-center gap-2">
-                  {isCheckingBadge ? (
+                  {isCheckingBadge || isSigningIn ? (
                     <>
                       <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Processing...
+                      {isSigningIn ? "Signing..." : "Processing..."}
                     </>
                   ) : (
                     <>
@@ -226,8 +239,7 @@ export default function Home() {
                 <span className="absolute inset-0 bg-gradient-to-r from-brand-secondary to-brand-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
               </button>
             </motion.div>
-
-            {isConnected && hasExplorerBadge && (
+            {isConnected && isSignedIn && hasExplorerBadge && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -239,17 +251,15 @@ export default function Home() {
                 </div>
               </motion.div>
             )}
-
-            {errorMessage && (
+            {(errorMessage || signInError) && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="mt-4 text-destructive font-medium bg-destructive/10 px-4 py-2 rounded-lg"
               >
-                {errorMessage}
+                {errorMessage || signInError}
               </motion.div>
             )}
-
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -290,7 +300,6 @@ export default function Home() {
               decentralized regenerative solutions across Europe.
             </motion.p>
           </motion.div>
-
           <motion.div
             variants={badgeContainerVariants}
             initial="hidden"
@@ -408,8 +417,7 @@ export default function Home() {
                 </div>
               </div>
             </motion.div>
-          </motion.div>
-
+          </motion.div>{" "}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -419,14 +427,14 @@ export default function Home() {
           >
             <button
               onClick={handleButtonClick}
-              disabled={isCheckingBadge}
+              disabled={isCheckingBadge || isSigningIn}
               className="relative overflow-hidden rounded-full bg-gradient-to-r from-brand-primary to-brand-secondary px-6 py-2.5 text-base font-semibold text-white shadow-lg group disabled:opacity-70"
             >
               <span className="relative z-10 flex items-center gap-2">
-                {isCheckingBadge ? (
+                {isCheckingBadge || isSigningIn ? (
                   <>
                     <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Processing...
+                    {isSigningIn ? "Signing..." : "Processing..."}
                   </>
                 ) : (
                   <>

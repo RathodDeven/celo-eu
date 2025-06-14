@@ -9,6 +9,7 @@ import Layout from "../components/Layout"
 import { injectedWallet } from "@rainbow-me/rainbowkit/wallets"
 import { ThemeProvider } from "../components/theme-provider"
 import RainbowKitWrapper from "./RainbowKitWrapper"
+import { AuthProvider } from "./AuthProvider"
 
 const connectors = connectorsForWallets(
   [
@@ -37,16 +38,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <RainbowKitWrapper>
-            <Layout>{children}</Layout>
-          </RainbowKitWrapper>
-        </ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <RainbowKitWrapper>
+              <Layout>{children}</Layout>
+            </RainbowKitWrapper>
+          </ThemeProvider>
+        </AuthProvider>
       </QueryClientProvider>
     </WagmiProvider>
   )

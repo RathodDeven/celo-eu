@@ -8,6 +8,9 @@ import { usePathname } from "next/navigation"
 import { ModeToggle } from "./ModeToggle"
 import { NAV_URLS, SOCIAL_URLS } from "@/lib/config"
 import { useAccount } from "wagmi"
+import { useAuth } from "@/providers/AuthProvider"
+import { useConnectModal } from "@rainbow-me/rainbowkit"
+import { Wallet } from "lucide-react"
 
 // Reuse footer navigation for drawer
 const socialNavigation = [
@@ -41,9 +44,11 @@ const isExternalLink = (url: string) => url.startsWith("http")
 export default function Header() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const pathname = usePathname()
-
   // Using wagmi's useAccount hook to check if wallet is connected
-  const { address, isConnected } = useAccount()
+  const { address, isConnected } = useAccount() // Using our custom auth context
+  const { isSignedIn, isLoading, signIn, error, clearError } = useAuth()
+  // Using RainbowKit connect modal
+  const { openConnectModal } = useConnectModal()
 
   // Helper function to check if a link is active
   const isActive = (path: string) => pathname === path
@@ -84,11 +89,12 @@ export default function Header() {
     <nav className="bg-background text-foreground border-b border-border">
       <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
         <div className="relative flex h-16 justify-between">
+          {" "}
           <div className="flex items-center sm:hidden">
             {/* Mobile menu button and logo side by side */}
             <button
               onClick={() => setIsDrawerOpen(true)}
-              className="inline-flex items-center justify-center rounded-md p-2 text-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-secondary"
+              className="inline-flex items-center justify-center rounded-md p-2 text-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ring"
             >
               <span className="sr-only">Open main menu</span>
               <Bars3Icon className="block h-6 w-6" aria-hidden="true" />
@@ -103,8 +109,51 @@ export default function Header() {
                 alt="Celo Europe Logo"
               />
             </div>
-          </div>
+          </div>{" "}
+          {/* Mobile right side controls */}
+          <div className="flex items-center gap-2 sm:hidden">
+            {/* Mobile Theme toggle */}
+            <ModeToggle />
 
+            {/* Mobile Custom Connect Button (when not connected) */}
+            {!isConnected && (
+              <button
+                onClick={openConnectModal}
+                className="inline-flex items-center justify-center rounded-full bg-primary p-2 text-primary-foreground shadow hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                title="Connect Wallet"
+              >
+                <Wallet size={16} />
+              </button>
+            )}
+
+            {/* Mobile Sign In Button (icon only) */}
+            {isConnected && !isSignedIn && (
+              <button
+                onClick={() => {
+                  clearError()
+                  signIn()
+                }}
+                disabled={isLoading}
+                className="inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground p-2 shadow hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Sign In"
+              >
+                {isLoading ? (
+                  <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <Wallet size={16} />
+                )}
+              </button>
+            )}
+
+            {/* Mobile Connect Button (only when signed in) */}
+            {isConnected && isSignedIn && (
+              <ConnectButton
+                showBalance={false}
+                accountStatus="avatar"
+                chainStatus="none"
+              />
+            )}
+          </div>
           <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-start">
             <div className="flex flex-shrink-0 items-center">
               <Image
@@ -136,7 +185,6 @@ export default function Header() {
               >
                 Guide
               </NavLink>
-
               <NavLink
                 href={NAV_URLS.TEAM}
                 className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium transition-colors duration-200 ${
@@ -146,9 +194,8 @@ export default function Header() {
                 }`}
               >
                 Team
-              </NavLink>
-
-              {isConnected && (
+              </NavLink>{" "}
+              {isConnected && isSignedIn && (
                 <NavLink
                   href={NAV_URLS.RESOURCES}
                   className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium transition-colors duration-200 ${
@@ -162,8 +209,7 @@ export default function Header() {
                   Resources
                 </NavLink>
               )}
-
-              {isConnected && (
+              {isConnected && isSignedIn && (
                 <NavLink
                   href={NAV_URLS.EVENTS}
                   className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium transition-colors duration-200 ${
@@ -177,7 +223,7 @@ export default function Header() {
                   Events
                 </NavLink>
               )}
-              {isConnected && (
+              {isConnected && isSignedIn && (
                 <NavLink
                   href={NAV_URLS.VEKI}
                   className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium transition-colors duration-200 ${
@@ -189,7 +235,7 @@ export default function Header() {
                   Veki Program
                 </NavLink>
               )}
-              {isConnected && (
+              {isConnected && isSignedIn && (
                 <NavLink
                   href={NAV_URLS.DASHBOARD}
                   className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium transition-colors duration-200 ${
@@ -202,19 +248,69 @@ export default function Header() {
                 </NavLink>
               )}
             </div>
-          </div>
-
+          </div>{" "}
           <div className="flex items-center pr-2 sm:static sm:ml-6 sm:pr-0">
-            {/* Theme toggle button */}
-            <div className="mr-3">
+            {/* Theme toggle button - only on desktop */}
+            <div className="mr-3 hidden sm:block">
               <ModeToggle />
             </div>
-            <ConnectButton
-              showBalance={{
-                smallScreen: false,
-                largeScreen: true,
-              }}
-            />
+            {/* Custom Connect Button - desktop only (when not connected) */}
+            {!isConnected && (
+              <button
+                onClick={openConnectModal}
+                className="mr-3 hidden sm:inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              >
+                <Wallet size={16} />
+                Connect Wallet
+              </button>
+            )}{" "}
+            {/* Sign In Button - desktop only (when connected but not signed in) */}
+            {isConnected && !isSignedIn && (
+              <div className="mr-3 relative hidden sm:block">
+                <button
+                  onClick={() => {
+                    clearError()
+                    signIn()
+                  }}
+                  disabled={isLoading}
+                  className="inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium shadow hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? (
+                    <>
+                      <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                      Signing...
+                    </>
+                  ) : (
+                    <>
+                      <Wallet size={16} />
+                      Sign In
+                    </>
+                  )}
+                </button>
+
+                {/* Error tooltip for desktop */}
+                {error && (
+                  <div className="absolute top-full left-0 mt-2 w-64 bg-destructive/10 text-destructive text-xs p-2 rounded shadow-lg z-50 border border-destructive/20">
+                    {error}
+                  </div>
+                )}
+              </div>
+            )}
+            {/* Desktop Connect Button (only when signed in) */}
+            {isConnected && isSignedIn && (
+              <div className="hidden sm:block mr-3">
+                <ConnectButton
+                  showBalance={{
+                    smallScreen: false,
+                    largeScreen: true,
+                  }}
+                  accountStatus={{
+                    smallScreen: "avatar",
+                    largeScreen: "full",
+                  }}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -270,58 +366,125 @@ export default function Header() {
                 }`}
                 onClick={() => setIsDrawerOpen(false)}
               >
-                Team
+                Team{" "}
               </NavLink>
-              <NavLink
-                href={NAV_URLS.RESOURCES}
-                className={`py-3 px-4 rounded-md font-medium transition-colors duration-200 ${
-                  isExternalLink(NAV_URLS.RESOURCES)
-                    ? "text-foreground/70 hover:bg-muted/50 hover:text-foreground hover:border-l-4 hover:border-brand-secondary/70"
-                    : isActive(NAV_URLS.RESOURCES)
-                    ? "bg-muted text-foreground border-l-4 border-brand-secondary"
-                    : "text-foreground/70 hover:bg-muted/50 hover:text-foreground hover:border-l-4 hover:border-brand-secondary/70"
-                }`}
-                onClick={() => setIsDrawerOpen(false)}
-              >
-                Resources
-              </NavLink>
-              <NavLink
-                href={NAV_URLS.EVENTS}
-                className={`py-3 px-4 rounded-md font-medium transition-colors duration-200 ${
-                  isExternalLink(NAV_URLS.EVENTS)
-                    ? "text-foreground/70 hover:bg-muted/50 hover:text-foreground hover:border-l-4 hover:border-brand-secondary/70"
-                    : isActive(NAV_URLS.EVENTS)
-                    ? "bg-muted text-foreground border-l-4 border-brand-secondary"
-                    : "text-foreground/70 hover:bg-muted/50 hover:text-foreground hover:border-l-4 hover:border-brand-secondary/70"
-                }`}
-                onClick={() => setIsDrawerOpen(false)}
-              >
-                Events
-              </NavLink>
-              <NavLink
-                href={NAV_URLS.VEKI}
-                className={`py-3 px-4 rounded-md font-medium transition-colors duration-200 ${
-                  isActive(NAV_URLS.VEKI)
-                    ? "bg-muted text-foreground border-l-4 border-brand-secondary"
-                    : "text-foreground/70 hover:bg-muted/50 hover:text-foreground hover:border-l-4 hover:border-brand-secondary/70"
-                }`}
-                onClick={() => setIsDrawerOpen(false)}
-              >
-                Veki Program
-              </NavLink>
-              {isConnected && (
+
+              {/* Only show these links when signed in */}
+              {isConnected && isSignedIn && (
+                <>
+                  <NavLink
+                    href={NAV_URLS.RESOURCES}
+                    className={`py-3 px-4 rounded-md font-medium transition-colors duration-200 ${
+                      isExternalLink(NAV_URLS.RESOURCES)
+                        ? "text-foreground/70 hover:bg-muted/50 hover:text-foreground hover:border-l-4 hover:border-brand-secondary/70"
+                        : isActive(NAV_URLS.RESOURCES)
+                        ? "bg-muted text-foreground border-l-4 border-brand-secondary"
+                        : "text-foreground/70 hover:bg-muted/50 hover:text-foreground hover:border-l-4 hover:border-brand-secondary/70"
+                    }`}
+                    onClick={() => setIsDrawerOpen(false)}
+                  >
+                    Resources
+                  </NavLink>
+                  <NavLink
+                    href={NAV_URLS.EVENTS}
+                    className={`py-3 px-4 rounded-md font-medium transition-colors duration-200 ${
+                      isExternalLink(NAV_URLS.EVENTS)
+                        ? "text-foreground/70 hover:bg-muted/50 hover:text-foreground hover:border-l-4 hover:border-brand-secondary/70"
+                        : isActive(NAV_URLS.EVENTS)
+                        ? "bg-muted text-foreground border-l-4 border-brand-secondary"
+                        : "text-foreground/70 hover:bg-muted/50 hover:text-foreground hover:border-l-4 hover:border-brand-secondary/70"
+                    }`}
+                    onClick={() => setIsDrawerOpen(false)}
+                  >
+                    Events
+                  </NavLink>
+                  <NavLink
+                    href={NAV_URLS.VEKI}
+                    className={`py-3 px-4 rounded-md font-medium transition-colors duration-200 ${
+                      isActive(NAV_URLS.VEKI)
+                        ? "bg-muted text-foreground border-l-4 border-brand-secondary"
+                        : "text-foreground/70 hover:bg-muted/50 hover:text-foreground hover:border-l-4 hover:border-brand-secondary/70"
+                    }`}
+                    onClick={() => setIsDrawerOpen(false)}
+                  >
+                    Veki Program
+                  </NavLink>
+                  <NavLink
+                    href={NAV_URLS.DASHBOARD}
+                    className={`py-3 px-4 rounded-md font-medium transition-colors duration-200 ${
+                      isActive(NAV_URLS.DASHBOARD)
+                        ? "bg-muted text-foreground border-l-4 border-brand-secondary"
+                        : "text-foreground/70 hover:bg-muted/50 hover:text-foreground hover:border-l-4 hover:border-brand-secondary/70"
+                    }`}
+                    onClick={() => setIsDrawerOpen(false)}
+                  >
+                    Dashboard
+                  </NavLink>
+                </>
+              )}
+
+              {/* Show basic links for non-signed in users */}
+              {(!isConnected || !isSignedIn) && (
                 <NavLink
-                  href={NAV_URLS.DASHBOARD}
+                  href={NAV_URLS.VEKI}
                   className={`py-3 px-4 rounded-md font-medium transition-colors duration-200 ${
-                    isActive(NAV_URLS.DASHBOARD)
+                    isActive(NAV_URLS.VEKI)
                       ? "bg-muted text-foreground border-l-4 border-brand-secondary"
                       : "text-foreground/70 hover:bg-muted/50 hover:text-foreground hover:border-l-4 hover:border-brand-secondary/70"
                   }`}
                   onClick={() => setIsDrawerOpen(false)}
                 >
-                  Dashboard
+                  Veki Program
                 </NavLink>
               )}
+
+              {/* Custom Connect Button for Mobile */}
+              {!isConnected && (
+                <div className="mx-4 mt-4">
+                  <button
+                    onClick={openConnectModal}
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground px-4 py-3 text-sm font-medium shadow hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  >
+                    <Wallet size={16} />
+                    Connect Wallet
+                  </button>
+                </div>
+              )}
+
+              {/* Sign In Button for Mobile */}
+              {isConnected && !isSignedIn && (
+                <div className="mx-4 mt-4">
+                  {" "}
+                  <button
+                    onClick={() => {
+                      clearError()
+                      signIn()
+                    }}
+                    disabled={isLoading}
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground px-4 py-3 text-sm font-medium shadow hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? (
+                      <>
+                        <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                        Signing...
+                      </>
+                    ) : (
+                      <>
+                        <Wallet size={16} />
+                        Sign In
+                      </>
+                    )}
+                  </button>
+                  {/* Error display for mobile */}
+                  {error && (
+                    <div className="mt-2 text-sm bg-destructive/10 text-destructive p-2 rounded border border-destructive/20">
+                      {error}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Sign Out Button for Mobile - Removed since sign-out is handled automatically */}
             </div>
 
             {/* Footer Content */}
