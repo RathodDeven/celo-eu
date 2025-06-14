@@ -13,17 +13,23 @@
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
 
-    --primary: 213 100% 18%; /* Deep Celo Blue (#002E5D) */
-    --primary-foreground: 0 0% 98%;
+    /* Revert to default shadcn colors */
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
 
-    --secondary: 48 100% 60%; /* Yellow-Gold (#FFCB05) */
-    --secondary-foreground: 213 100% 18%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    /* Add brand colors - Deep Celo Blue and Yellow-Gold */
+    --brand-primary: 213 100% 18%; /* Deep Celo Blue (#002E5D) */
+    --brand-secondary: 48 100% 60%; /* Yellow-Gold (#FFCB05) */
 
     --muted: 213 25% 90%;
     --muted-foreground: 213 20% 35%;
 
-    --accent: 213 100% 18%;
-    --accent-foreground: 48 100% 60%;
+    /* Fix accent colors to match shadcn defaults */
+    --accent: 210 40% 96.1%; /* Changed to default shadcn accent */
+    --accent-foreground: 222.2 47.4% 11.2%; /* Changed to default shadcn accent foreground */
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
@@ -38,6 +44,9 @@
     --chart-4: 30 80% 55%;
     --chart-5: 280 65% 60%;
 
+    /* Add this to define the dropdown item hover color for light mode */
+    --dropdown-item-hover: 220 14.3% 95.9%;
+
     --radius: 0.5rem;
   }
 
@@ -51,17 +60,23 @@
     --popover: 213 100% 12%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 48 100% 60%; /* Yellow-Gold for light on dark */
-    --primary-foreground: 213 100% 10%;
+    /* Revert to default shadcn dark mode colors */
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
 
-    --secondary: 48 100% 60%; /* Keep same yellow for consistency */
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    /* Reverse brand colors for dark mode */
+    --brand-primary: 48 100% 60%; /* Yellow-Gold for dark mode */
+    --brand-secondary: 213 100% 18%; /* Deep Celo Blue for dark mode */
 
     --muted: 213 30% 20%;
     --muted-foreground: 213 15% 70%;
 
-    --accent: 213 40% 20%;
-    --accent-foreground: 0 0% 98%;
+    /* Fix accent colors for dark mode */
+    --accent: 217.2 32.6% 17.5%; /* Changed to default shadcn dark accent */
+    --accent-foreground: 210 40% 98%; /* Changed to default shadcn dark accent foreground */
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
@@ -75,6 +90,9 @@
     --chart-3: 213 100% 18%;
     --chart-4: 30 80% 55%;
     --chart-5: 340 75% 55%;
+
+    /* Add this to define the dropdown item hover color for dark mode */
+    --dropdown-item-hover: 217.2 32.6% 17.5%;
   }
 }
 
@@ -91,3 +109,22 @@
 .no-handle [data-handle] {
   display: none;
 }
+
+/* Remove any conflicting styles and provide clean dropdown styling */
+[data-radix-dropdown-menu-content] [role="menuitem"]:hover,
+[data-radix-dropdown-menu-content] [role="menuitem"][data-highlighted] {
+  background-color: hsl(var(--dropdown-item-hover)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Ensure dropdown menu background is not transparent */
+[data-radix-dropdown-menu-content],
+[data-radix-popper][data-state="open"] [role="dialog"] {
+  background-color: hsl(var(--popover)) !important;
+  color: hsl(var(--popover-foreground)) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Remove all other competing styles */
+/* Delete these conflicting rules from the end of your file */

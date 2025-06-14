@@ -716,4 +716,4 @@ export const nexusExplorerAbi = [
     type: "function",
   },
 ]
-export const nexusExplorerAddress = "0x21d6Bfd948218D83c63C1F0Bb8A30e547D810056"
+export const nexusExplorerAddress = "0xF9E2f19e01D615489f17C68CC7b1e455e632DA4b"
