@@ -93,7 +93,19 @@ contract NexusExplorerBadge is
         uint256 tokenId,
         address auth
     ) internal override(ERC721, ERC721Pausable) returns (address) {
-        return super._update(to, tokenId, auth);
+        address from = _ownerOf(tokenId);
+        
+        // Call parent _update first
+        address result = super._update(to, tokenId, auth);
+        
+        // Reset hasMinted for the previous owner if they no longer own any badges
+        if (from != address(0) && from != to) {
+            if (balanceOf(from) == 0) {
+                hasMinted[from] = false;
+            }
+        }
+        
+        return result;
     }
 
     function tokenURI(
