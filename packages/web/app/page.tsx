@@ -40,12 +40,11 @@ export default function Home() {
     error: signInError,
     clearError,
   } = useAuth()
-
-  // Use Wagmi's useReadContract hook to efficiently check for NFT ownership
-  const { data: userTokenIds, isLoading: isLoadingTokens } = useReadContract({
+  // Use Wagmi's useReadContract hook to check for NFT ownership using hasMinted
+  const { data: hasMinted, isLoading: isLoadingTokens } = useReadContract({
     address: nexusExplorerAddress,
     abi: nexusExplorerAbi,
-    functionName: "getNFTsByAddress",
+    functionName: "hasMinted",
     args: address ? [address] : undefined,
     chainId: celoAlfajores.id,
     query: {
@@ -54,9 +53,7 @@ export default function Home() {
   })
 
   // Determine if user has Explorer Badge
-  const hasExplorerBadge = userTokenIds
-    ? (userTokenIds as bigint[]).length > 0
-    : false
+  const hasExplorerBadge = hasMinted || false
   const handleButtonClick = async () => {
     if (!isConnected || !address) {
       // Open RainbowKit connect modal if wallet is not connected

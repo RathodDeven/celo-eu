@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { verifyMessage } from "viem"
 import crypto from "crypto"
-import { challengeStore, cleanExpiredChallenges } from "@/lib/challengeStore"
+import connectDB from "@/lib/mongodb"
+import User from "@/lib/models/User"
 
 // Simple token generation using crypto instead of JWT
 const generateAuthToken = (address: string) => {
@@ -16,8 +17,7 @@ const generateAuthToken = (address: string) => {
 
 export async function POST(request: NextRequest) {
   try {
-    // Clean expired challenges first
-    cleanExpiredChallenges()
+    await connectDB()
 
     const { address, signature, message } = await request.json()
 
@@ -35,33 +35,17 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+
     const normalizedAddress = address.toLowerCase()
     console.log(
       `[VERIFY] Verification attempt for address: ${normalizedAddress}`
     )
-    console.log(
-      `[VERIFY] Challenge store is global:`,
-      !!globalThis.challengeStore
-    )
-    console.log(`[VERIFY] Total challenges in store: ${challengeStore.size}`)
-    console.log(
-      `[VERIFY] All addresses in store:`,
-      Array.from(challengeStore.keys())
-    )
 
-    // Check if challenge exists and is valid
-    const storedChallenge = challengeStore.get(normalizedAddress)
-    if (!storedChallenge) {
+    // Find user and check if challenge exists
+    const user = await User.findOne({ address: normalizedAddress })
+    if (!user?.challenge) {
       console.log(
         `[VERIFY] ERROR: No challenge found for address: ${normalizedAddress}`
-      )
-      console.log(
-        `[VERIFY] Available challenges:`,
-        Array.from(challengeStore.entries()).map(([addr, challenge]) => ({
-          address: addr,
-          timestamp: challenge.timestamp,
-          age: Date.now() - challenge.timestamp,
-        }))
       )
       return NextResponse.json(
         {
@@ -73,26 +57,31 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`[VERIFY] Challenge found for address: ${normalizedAddress}`)
-    console.log(`[VERIFY] Challenge timestamp: ${storedChallenge.timestamp}`)
+    console.log(`[VERIFY] Challenge timestamp: ${user.challenge.timestamp}`)
     console.log(
-      `[VERIFY] Challenge age: ${Date.now() - storedChallenge.timestamp}ms`
-    ) // Check if challenge has expired (30 minutes)
+      `[VERIFY] Challenge age: ${Date.now() - user.challenge.timestamp}ms`
+    )
+
+    // Check if challenge has expired (30 minutes)
     const now = Date.now()
     const expirationTime = 30 * 60 * 1000 // 30 minutes
-    if (now - storedChallenge.timestamp > expirationTime) {
+    if (now - user.challenge.timestamp > expirationTime) {
       console.log(
         `[VERIFY] Challenge expired for address: ${normalizedAddress}`
       )
-      challengeStore.delete(normalizedAddress)
+      user.challenge = undefined
+      await user.save()
       return NextResponse.json(
         { error: "Challenge has expired. Please request a new challenge." },
         { status: 400 }
       )
-    } // Verify that the message matches the stored challenge
-    if (message !== storedChallenge.message) {
+    }
+
+    // Verify that the message matches the stored challenge
+    if (message !== user.challenge.message) {
       console.log(`[VERIFY] Message mismatch for address: ${normalizedAddress}`)
       console.log(
-        `[VERIFY] Expected message length: ${storedChallenge.message.length}`
+        `[VERIFY] Expected message length: ${user.challenge.message.length}`
       )
       console.log(`[VERIFY] Received message length: ${message.length}`)
       return NextResponse.json(
@@ -132,9 +121,10 @@ export async function POST(request: NextRequest) {
       )
 
       // Only remove the challenge after successful verification
-      challengeStore.delete(normalizedAddress)
+      user.challenge = undefined
+      await user.save()
       console.log(
-        `[VERIFY] Challenge removed for address: ${normalizedAddress}. Remaining challenges: ${challengeStore.size}`
+        `[VERIFY] Challenge removed for address: ${normalizedAddress}`
       )
 
       // Generate auth token

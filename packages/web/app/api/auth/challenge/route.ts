@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 import crypto from "crypto"
-import { challengeStore, cleanExpiredChallenges } from "@/lib/challengeStore"
+import connectDB from "@/lib/mongodb"
+import User from "@/lib/models/User"
 
 export async function POST(request: NextRequest) {
   try {
-    // Don't clean up challenges during creation to avoid race conditions
-    // cleanExpiredChallenges()
+    await connectDB()
 
     const { address } = await request.json()
 
@@ -23,12 +23,15 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+
     const normalizedAddress = address.toLowerCase()
 
+    // Find or create user
+    let user = await User.findOne({ address: normalizedAddress })
+
     // Check if there's already a recent challenge for this address
-    const existingChallenge = challengeStore.get(normalizedAddress)
-    if (existingChallenge) {
-      const age = Date.now() - existingChallenge.timestamp
+    if (user?.challenge) {
+      const age = Date.now() - user.challenge.timestamp
       // If challenge is less than 1 minute old, return it instead of creating a new one
       if (age < 60000) {
         // 1 minute
@@ -36,9 +39,9 @@ export async function POST(request: NextRequest) {
           `[CHALLENGE] Returning existing challenge for address: ${normalizedAddress} (age: ${age}ms)`
         )
         return NextResponse.json({
-          message: existingChallenge.message,
+          message: user.challenge.message,
           nonce: "existing",
-          timestamp: existingChallenge.timestamp,
+          timestamp: user.challenge.timestamp,
         })
       }
     }
@@ -46,34 +49,23 @@ export async function POST(request: NextRequest) {
     const timestamp = Date.now()
     const nonce = crypto.randomBytes(16).toString("hex")
 
-    const message = `Welcome to Celo Europe!\n\nPlease sign this message to authenticate.\n\nAddress: ${address}\nNonce: ${nonce}\nTimestamp: ${timestamp}\n\nThis request will not trigger a blockchain transaction or cost any gas fees.` // Store challenge for verification with longer expiration
-    challengeStore.set(normalizedAddress, { message, timestamp })
+    const message = `Welcome to Celo Europe!\n\nPlease sign this message to authenticate.\n\nAddress: ${address}\nNonce: ${nonce}\nTimestamp: ${timestamp}\n\nThis request will not trigger a blockchain transaction or cost any gas fees.`
 
-    // Verify challenge was stored correctly
-    const storedChallenge = challengeStore.get(normalizedAddress)
-    if (!storedChallenge) {
-      console.error(
-        `[CHALLENGE] CRITICAL: Failed to store challenge for address: ${normalizedAddress}`
-      )
-      return NextResponse.json(
-        { error: "Failed to create challenge. Please try again." },
-        { status: 500 }
-      )
+    // Store challenge in user document
+    if (!user) {
+      user = new User({
+        address: normalizedAddress,
+        challenge: { message, timestamp },
+      })
+    } else {
+      user.challenge = { message, timestamp }
     }
+
+    await user.save()
+
     console.log(`[CHALLENGE] Created for address: ${normalizedAddress}`)
-    console.log(
-      `[CHALLENGE] Challenge store is global:`,
-      !!globalThis.challengeStore
-    )
     console.log(`[CHALLENGE] Timestamp: ${timestamp}`)
-    console.log(`[CHALLENGE] Total challenges in store: ${challengeStore.size}`)
-    console.log(
-      `[CHALLENGE] All addresses in store:`,
-      Array.from(challengeStore.keys())
-    )
-    console.log(
-      `[CHALLENGE] Verification - stored timestamp: ${storedChallenge.timestamp}`
-    )
+    console.log(`[CHALLENGE] Stored in MongoDB successfully`)
 
     return NextResponse.json({
       message,

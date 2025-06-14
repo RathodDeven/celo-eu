@@ -7,10 +7,14 @@ import { useState } from "react"
 import { usePathname } from "next/navigation"
 import { ModeToggle } from "./ModeToggle"
 import { NAV_URLS, SOCIAL_URLS } from "@/lib/config"
-import { useAccount } from "wagmi"
+import { useAccount, useReadContract } from "wagmi"
 import { useAuth } from "@/providers/AuthProvider"
 import { useConnectModal } from "@rainbow-me/rainbowkit"
 import { Wallet } from "lucide-react"
+import {
+  nexusExplorerAbi,
+  nexusExplorerAddress,
+} from "@/lib/abi/NexusExplorerBadge"
 
 // Reuse footer navigation for drawer
 const socialNavigation = [
@@ -49,6 +53,16 @@ export default function Header() {
   const { isSignedIn, isLoading, signIn, error, clearError } = useAuth()
   // Using RainbowKit connect modal
   const { openConnectModal } = useConnectModal()
+  // Check if user has minted the Explorer Badge
+  const { data: hasMinted } = useReadContract({
+    address: nexusExplorerAddress,
+    abi: nexusExplorerAbi,
+    functionName: "hasMinted",
+    args: [address],
+    query: {
+      enabled: !!address && isConnected,
+    },
+  }) as { data: boolean | undefined }
 
   // Helper function to check if a link is active
   const isActive = (path: string) => pathname === path
@@ -235,7 +249,7 @@ export default function Header() {
                   Veki Program
                 </NavLink>
               )}
-              {isConnected && isSignedIn && (
+              {isConnected && isSignedIn && hasMinted && (
                 <NavLink
                   href={NAV_URLS.DASHBOARD}
                   className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium transition-colors duration-200 ${
@@ -407,19 +421,21 @@ export default function Header() {
                     }`}
                     onClick={() => setIsDrawerOpen(false)}
                   >
-                    Veki Program
+                    Veki Program{" "}
                   </NavLink>
-                  <NavLink
-                    href={NAV_URLS.DASHBOARD}
-                    className={`py-3 px-4 rounded-md font-medium transition-colors duration-200 ${
-                      isActive(NAV_URLS.DASHBOARD)
-                        ? "bg-muted text-foreground border-l-4 border-brand-secondary"
-                        : "text-foreground/70 hover:bg-muted/50 hover:text-foreground hover:border-l-4 hover:border-brand-secondary/70"
-                    }`}
-                    onClick={() => setIsDrawerOpen(false)}
-                  >
-                    Dashboard
-                  </NavLink>
+                  {hasMinted && (
+                    <NavLink
+                      href={NAV_URLS.DASHBOARD}
+                      className={`py-3 px-4 rounded-md font-medium transition-colors duration-200 ${
+                        isActive(NAV_URLS.DASHBOARD)
+                          ? "bg-muted text-foreground border-l-4 border-brand-secondary"
+                          : "text-foreground/70 hover:bg-muted/50 hover:text-foreground hover:border-l-4 hover:border-brand-secondary/70"
+                      }`}
+                      onClick={() => setIsDrawerOpen(false)}
+                    >
+                      Dashboard
+                    </NavLink>
+                  )}
                 </>
               )}
 
