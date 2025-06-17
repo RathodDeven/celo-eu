@@ -1,12 +1,13 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useAccount } from "wagmi"
+import { useAccount, useChainId } from "wagmi"
 import {
   useReadContract,
-  useWriteContract,
+  useSendTransaction,
   useWaitForTransactionReceipt,
 } from "wagmi"
+import { encodeFunctionData } from "viem"
 import { useState, useEffect } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import Image from "next/image"
@@ -41,6 +42,7 @@ import {
   nexusExplorerAbi,
 } from "@/lib/abi/NexusExplorerBadge"
 import { useAuth } from "@/providers/AuthProvider"
+import { getDivviDataSuffix, submitDivviReferral } from "@/lib/divvi-utils"
 
 interface FormData {
   name: string
@@ -51,11 +53,11 @@ interface FormData {
 function VekiProgramContent() {
   const router = useRouter()
   const { address, isConnected } = useAccount()
+  const chainId = useChainId()
   const {
     isSignedIn,
     makeAuthenticatedRequest, // Use the new authenticated request method
   } = useAuth()
-
   // Contract interactions
   const { data: hasMinted, refetch: refetchHasMinted } = useReadContract({
     address: nexusExplorerAddress,
@@ -70,16 +72,23 @@ function VekiProgramContent() {
   })
 
   const {
-    writeContract,
+    sendTransaction,
     data: hash,
     error: mintError,
     isPending: isMinting,
-  } = useWriteContract()
+  } = useSendTransaction()
 
   const { isLoading: isConfirming, isSuccess: isConfirmed } =
     useWaitForTransactionReceipt({
       hash,
     })
+
+  // Submit Divvi referral after successful transaction
+  useEffect(() => {
+    if (isConfirmed && hash) {
+      submitDivviReferral(hash, chainId)
+    }
+  }, [isConfirmed, hash, chainId])
 
   // Component state
   const [currentStep, setCurrentStep] = useState(1)
@@ -263,14 +272,31 @@ function VekiProgramContent() {
     }
   }
 
-  const handleMintBadge = () => {
+  const handleMintBadge = async () => {
     if (!address) return
 
-    writeContract({
-      address: nexusExplorerAddress,
-      abi: nexusExplorerAbi,
-      functionName: "mintExplorerBadge",
-    })
+    try {
+      // Get the Divvi referral data suffix
+      const dataSuffix = getDivviDataSuffix()
+
+      // Encode the original function call
+      const originalData = encodeFunctionData({
+        abi: nexusExplorerAbi,
+        functionName: "mintExplorerBadge",
+        args: [],
+      })
+
+      // Append the Divvi referral suffix
+      const dataWithReferral = (originalData + dataSuffix) as `0x${string}`
+
+      // Use sendTransaction to include custom data with Divvi referral
+      sendTransaction({
+        to: nexusExplorerAddress,
+        data: dataWithReferral,
+      })
+    } catch (error) {
+      console.error("Minting error:", error)
+    }
   }
 
   const stepVariants = {
