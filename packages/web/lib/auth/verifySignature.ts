@@ -36,7 +36,8 @@ export function withSignatureVerification(
         { error: "Invalid JSON in request body" },
         { status: 400 }
       )
-    }    try {
+    }
+    try {
       const {
         signature,
         message,
@@ -52,13 +53,18 @@ export function withSignatureVerification(
       }
 
       // Validate request origin and timestamp for additional security
-      const origin = request.headers.get('origin')
-      const referer = request.headers.get('referer')
-      
+      const origin = request.headers.get("origin")
+      const referer = request.headers.get("referer")
+
       // In production, validate against allowed origins
-      const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000']
-      
-      if (origin && !allowedOrigins.some(allowed => origin.includes(allowed))) {
+      const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [
+        "http://localhost:3000",
+      ]
+
+      if (
+        origin &&
+        !allowedOrigins.some((allowed) => origin.includes(allowed))
+      ) {
         console.warn(`Suspicious request from origin: ${origin}`)
         // In production, you might want to reject this
         // return NextResponse.json({ error: "Unauthorized origin" }, { status: 403 })
@@ -70,7 +76,9 @@ export function withSignatureVerification(
         (typeof message === "string" ? message : JSON.stringify(message))
 
       // Generate a nonce from the message to prevent replay attacks
-      const messageHash = ethers.keccak256(ethers.toUtf8Bytes(messageToVerifyAgainstSignature))
+      const messageHash = ethers.keccak256(
+        ethers.toUtf8Bytes(messageToVerifyAgainstSignature)
+      )
       if (usedNonces.has(messageHash)) {
         return NextResponse.json(
           { error: "Message has already been used (replay attack protection)" },
@@ -114,7 +122,8 @@ export function withSignatureVerification(
             { status: 400 }
           )
         }
-      }      if (
+      }
+      if (
         recoveredAddress.toLowerCase() !==
         providedAddressInOriginalBody.toLowerCase()
       ) {

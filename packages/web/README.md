@@ -5,7 +5,7 @@ A Next.js Web3 application for the Celo Europe ecosystem, featuring secure walle
 ## 🚀 Features
 
 - 🔐 **Secure Web3 Authentication**: Wallet-based login with JWT tokens and automatic refresh
-- 🏆 **Nexus Explorer Badge**: NFT badge system for community members  
+- 🏆 **Nexus Explorer Badge**: NFT badge system for community members
 - 📱 **Responsive Design**: Modern UI with dark/light theme support
 - 🛡️ **Enterprise Security**: Rate limiting, replay protection, and secure token management
 - 🔄 **Automatic Token Refresh**: Seamless authentication without user intervention
@@ -57,12 +57,14 @@ See `.env.example` for complete configuration details.
 ## 📚 Documentation
 
 ### Core Documentation
+
 - **[Authentication Flow](./AUTHENTICATION_FLOW.md)** - Complete authentication system overview
 - **[Automatic Token Refresh](./TOKEN_REFRESH_GUIDE.md)** - Token management and refresh system
 - **[Security Guide](./SECURITY.md)** - Security implementation and best practices
 - **[Refactoring Summary](./REFACTORING_SUMMARY.md)** - Recent changes and improvements
 
 ### Development Guides
+
 - **[UI Components](./UI_COMPONENTS.md)** - Component library and usage
 - **[Deployment Guide](./DEPLOYMENT_GUIDE.md)** - Production deployment instructions
 
@@ -71,6 +73,7 @@ See `.env.example` for complete configuration details.
 This application features a sophisticated authentication system:
 
 ### Key Features
+
 - **Web3 Wallet Authentication**: Sign challenges with your wallet
 - **JWT Token System**: Secure, stateless authentication
 - **Automatic Token Refresh**: Seamless token management
@@ -78,16 +81,17 @@ This application features a sophisticated authentication system:
 - **Graceful Fallback**: Re-authentication when tokens expire
 
 ### Quick Usage
+
 ```typescript
 import { useAuth } from "@/providers/AuthProvider"
 
 function MyComponent() {
   const { makeAuthenticatedRequest } = useAuth()
-  
+
   // Automatic token refresh handling
   const response = await makeAuthenticatedRequest("/api/users", {
     method: "POST",
-    body: JSON.stringify({ name, email })
+    body: JSON.stringify({ name, email }),
   })
 }
 ```
@@ -131,11 +135,13 @@ packages/web/
 ## 🚀 Deployment
 
 ### Prerequisites
+
 - Node.js 18+
 - MongoDB database
 - Environment variables configured
 
 ### Build Process
+
 ```bash
 # Install dependencies
 pnpm install
@@ -148,6 +154,7 @@ pnpm start
 ```
 
 ### Environment Setup
+
 1. Copy `.env.example` to `.env.local`
 2. Configure all required environment variables
 3. Ensure MongoDB is accessible
@@ -164,6 +171,7 @@ See [Deployment Guide](./DEPLOYMENT_GUIDE.md) for detailed instructions.
 5. Open a Pull Request
 
 ### Development Guidelines
+
 - Follow TypeScript best practices
 - Use the existing component patterns
 - Add documentation for new features
@@ -184,6 +192,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## 🆘 Support
 
 For questions or support:
+
 - Check the documentation in this repository
 - Review the troubleshooting guides
 - Open an issue for bugs or feature requests

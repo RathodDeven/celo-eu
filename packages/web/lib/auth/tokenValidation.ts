@@ -13,11 +13,11 @@ export function withTokenValidation(
 ) {
   return async (request: NextRequest) => {
     // Extract token from Authorization header
-    const authHeader = request.headers.get('authorization')
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    const authHeader = request.headers.get("authorization")
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return NextResponse.json(
-        { error: 'Missing or invalid authorization header' },
+        { error: "Missing or invalid authorization header" },
         { status: 401 }
       )
     }
@@ -26,10 +26,10 @@ export function withTokenValidation(
 
     // Verify the token
     const payload = verifyAuthToken(token)
-    
+
     if (!payload) {
       return NextResponse.json(
-        { error: 'Invalid or expired token' },
+        { error: "Invalid or expired token" },
         { status: 401 }
       )
     }
@@ -47,13 +47,13 @@ export function withTokenValidation(
  */
 export function extractToken(request: NextRequest): string | null {
   // Check Authorization header first
-  const authHeader = request.headers.get('authorization')
-  if (authHeader && authHeader.startsWith('Bearer ')) {
+  const authHeader = request.headers.get("authorization")
+  if (authHeader && authHeader.startsWith("Bearer ")) {
     return authHeader.substring(7)
   }
 
   // Check cookies as fallback
-  const cookieToken = request.cookies.get('auth-token')?.value
+  const cookieToken = request.cookies.get("auth-token")?.value
   if (cookieToken) {
     return cookieToken
   }
@@ -70,11 +70,11 @@ export function withFlexibleTokenValidation(
 ) {
   return async (request: NextRequest) => {
     const token = extractToken(request)
-    
+
     if (!token) {
       if (options.required) {
         return NextResponse.json(
-          { error: 'Authentication required' },
+          { error: "Authentication required" },
           { status: 401 }
         )
       }
@@ -84,11 +84,11 @@ export function withFlexibleTokenValidation(
 
     // Verify the token
     const payload = verifyAuthToken(token)
-    
+
     if (!payload) {
       if (options.required) {
         return NextResponse.json(
-          { error: 'Invalid or expired token' },
+          { error: "Invalid or expired token" },
           { status: 401 }
         )
       }

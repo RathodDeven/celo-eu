@@ -29,7 +29,10 @@ interface AuthContextType extends AuthState {
   ) => Promise<boolean>
   isWalletConnected: boolean
   connectedAddress: string | undefined
-  makeAuthenticatedRequest: (url: string, options?: RequestInit) => Promise<Response>
+  makeAuthenticatedRequest: (
+    url: string,
+    options?: RequestInit
+  ) => Promise<Response>
   refreshToken: () => Promise<boolean>
 }
 
@@ -46,9 +49,10 @@ const AUTH_STORAGE_KEY = "celo-eu-auth"
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export function AuthProvider({ children }: { children: ReactNode }) {  const { address, isConnected } = useAccount()
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const { address, isConnected } = useAccount()
   const { signMessageAsync } = useSignMessage()
-  
+
   const [authState, setAuthState] = useState<AuthState>({
     isSignedIn: false,
     isLoading: false,
@@ -312,7 +316,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {  const { a
         throw new Error(
           "Failed to verify signature after multiple retries or unrecoverable error."
         )
-      }      const {
+      }
+      const {
         token,
         refreshToken,
         address: verifiedAddress,
@@ -343,9 +348,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {  const { a
       })
 
       // Handle return URL after successful authentication
-      const returnTo = sessionStorage.getItem('returnTo')
+      const returnTo = sessionStorage.getItem("returnTo")
       if (returnTo) {
-        sessionStorage.removeItem('returnTo')
+        sessionStorage.removeItem("returnTo")
         window.location.href = returnTo
       }
 
@@ -406,7 +411,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {  const { a
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${authState.token}`, // Use JWT token
+            Authorization: `Bearer ${authState.token}`, // Use JWT token
           },
           body: JSON.stringify({
             name: currentData.name,
@@ -438,12 +443,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {  const { a
         return false
       }
     },
-    [
-      address,
-      isConnected,
-      authState.token,
-      authState.signedAddress,
-    ]
+    [address, isConnected, authState.token, authState.signedAddress]
   )
 
   const clearError = useCallback(() => {
@@ -479,7 +479,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {  const { a
         return false
       }
 
-      const { token, refreshToken, address: verifiedAddress, expiresAt } = await response.json()
+      const {
+        token,
+        refreshToken,
+        address: verifiedAddress,
+        expiresAt,
+      } = await response.json()
 
       const newAuthData: AuthData = {
         ...authData,
@@ -490,7 +495,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {  const { a
       }
 
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newAuthData))
-      setAuthState(prev => ({
+      setAuthState((prev) => ({
         ...prev,
         token,
         signedAddress: verifiedAddress,
@@ -514,48 +519,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {  const { a
   }, [])
 
   // Authenticated request method with automatic refresh
-  const makeAuthenticatedRequest = useCallback(async (
-    url: string,
-    options: RequestInit = {}
-  ): Promise<Response> => {
-    if (!authState.token) {
-      throw new Error("No authentication token available")
-    }
-
-    // First attempt with current token
-    let response = await fetch(url, {
-      ...options,
-      headers: {
-        ...options.headers,
-        "Authorization": `Bearer ${authState.token}`,
-      },
-    })
-
-    // If unauthorized, try to refresh token
-    if (response.status === 401) {
-      const refreshed = await refreshAuthToken()
-      
-      if (refreshed) {
-        // Retry with new token
-        const newAuthData = localStorage.getItem(AUTH_STORAGE_KEY)
-        if (newAuthData) {
-          const { token } = JSON.parse(newAuthData) as AuthData
-          response = await fetch(url, {
-            ...options,
-            headers: {
-              ...options.headers,
-              "Authorization": `Bearer ${token}`,
-            },
-          })
-        }
-      } else {
-        // Refresh failed, need to re-authenticate
-        throw new Error("Authentication required - please sign in again")
+  const makeAuthenticatedRequest = useCallback(
+    async (url: string, options: RequestInit = {}): Promise<Response> => {
+      if (!authState.token) {
+        throw new Error("No authentication token available")
       }
-    }
 
-    return response
-  }, [authState.token, refreshAuthToken])
+      // First attempt with current token
+      let response = await fetch(url, {
+        ...options,
+        headers: {
+          ...options.headers,
+          Authorization: `Bearer ${authState.token}`,
+        },
+      })
+
+      // If unauthorized, try to refresh token
+      if (response.status === 401) {
+        const refreshed = await refreshAuthToken()
+
+        if (refreshed) {
+          // Retry with new token
+          const newAuthData = localStorage.getItem(AUTH_STORAGE_KEY)
+          if (newAuthData) {
+            const { token } = JSON.parse(newAuthData) as AuthData
+            response = await fetch(url, {
+              ...options,
+              headers: {
+                ...options.headers,
+                Authorization: `Bearer ${token}`,
+              },
+            })
+          }
+        } else {
+          // Refresh failed, need to re-authenticate
+          throw new Error("Authentication required - please sign in again")
+        }
+      }
+
+      return response
+    },
+    [authState.token, refreshAuthToken]
+  )
   // Combine all state and functions into a single context value
   const authContextValue: AuthContextType = {
     ...authState,

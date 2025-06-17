@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
-import { verifyAuthToken, generateAuthToken, generateRefreshToken } from "@/lib/auth/jwt"
+import {
+  verifyAuthToken,
+  generateAuthToken,
+  generateRefreshToken,
+} from "@/lib/auth/jwt"
 import { withRateLimit, rateLimitConfigs } from "@/lib/auth/rateLimit"
 
 async function handleRefresh(request: NextRequest) {
@@ -15,7 +19,7 @@ async function handleRefresh(request: NextRequest) {
 
     // Verify the refresh token
     const payload = verifyAuthToken(refreshToken)
-    
+
     if (!payload) {
       return NextResponse.json(
         { error: "Invalid or expired refresh token" },
@@ -44,4 +48,7 @@ async function handleRefresh(request: NextRequest) {
 }
 
 // Apply rate limiting to prevent token refresh abuse
-export const POST = withRateLimit(handleRefresh, { windowMs: 60 * 1000, maxRequests: 10 })
+export const POST = withRateLimit(handleRefresh, {
+  windowMs: 60 * 1000,
+  maxRequests: 10,
+})

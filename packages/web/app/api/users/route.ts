@@ -12,12 +12,7 @@ const handlePost = async (request: AuthenticatedRequest) => {
     const { verifiedAddress } = request
     const bodyData = await request.json()
 
-    const {
-      username,
-      email,
-      name,
-      agreedToMarketing,
-    } = bodyData as {
+    const { username, email, name, agreedToMarketing } = bodyData as {
       username?: string
       email?: string
       name?: string
@@ -119,7 +114,8 @@ async function handlePut(request: AuthenticatedRequest) {
     if (name === undefined && email === undefined) {
       return NextResponse.json(
         {
-          error: "At least one field (name or email) must be provided for update.",
+          error:
+            "At least one field (name or email) must be provided for update.",
         },
         { status: 400 }
       )

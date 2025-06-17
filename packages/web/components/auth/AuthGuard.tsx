@@ -19,7 +19,7 @@ export function AuthGuard({
   walletPromptDescription,
   signInPromptTitle,
   signInPromptDescription,
-  loadingComponent
+  loadingComponent,
 }: AuthGuardProps) {
   const { isConnected } = useAccount()
   const { isSignedIn, isLoading } = useAuth()

@@ -5,7 +5,7 @@ Welcome to the official Celo Europe front-end application — a Next.js-based dA
 ## 🚀 Features
 
 - 🔐 **Secure Web3 Authentication**: Wallet-based login with automatic JWT token refresh
-- 🪪 **Nexus Explorer Badge**: NFT badge system for verifiable Celo Europe membership  
+- 🪪 **Nexus Explorer Badge**: NFT badge system for verifiable Celo Europe membership
 - 📚 **Educational Content**: Comprehensive guide to help onboard users to the Celo ecosystem
 - 📝 **Community Platform**: Blog and collaborative features (coming soon)
 - 🛡️ **Enterprise Security**: Rate limiting, replay protection, and secure authentication

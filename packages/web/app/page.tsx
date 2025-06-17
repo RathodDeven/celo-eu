@@ -332,8 +332,9 @@ export default function Home() {
                 </div>
 
                 <p className="text-muted-foreground mb-8">
-                  The first level of our membership is the Explorer Pass. It&apos;s
-                  open to anyone and can be minted directly from our dashboard.
+                  The first level of our membership is the Explorer Pass.
+                  It&apos;s open to anyone and can be minted directly from our
+                  dashboard.
                 </p>
 
                 <div className="space-y-4">

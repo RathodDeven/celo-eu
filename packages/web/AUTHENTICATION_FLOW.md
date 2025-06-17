@@ -52,6 +52,7 @@ Response:
 ```
 
 **Security Features**:
+
 - ✅ Server controls all challenges (stored in MongoDB)
 - ✅ Challenge expires in 30 minutes
 - ✅ Replay attack prevention
@@ -74,7 +75,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
   "agreedToMarketing": false
 }
 
-// Updating a user profile  
+// Updating a user profile
 PUT /api/users
 Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
 {
@@ -88,17 +89,19 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
 ## What Changed (Your Concerns Were Valid!)
 
 ### ❌ BEFORE (Insecure/Redundant):
+
 ```typescript
 // Had to sign EVERY API request
 const payload = {
   message: { address, name, email },
   signature: challengeSignature,
   originalChallenge: challengeMessage,
-  address: address
+  address: address,
 }
 ```
 
 ### ✅ AFTER (Secure/Simple):
+
 ```typescript
 // Just use the JWT token
 headers: {
@@ -155,6 +158,7 @@ Response:
 > **"When JWT expires, ask for new challenge signature?"**
 
 **Yes!** When JWT expires:
+
 1. Try to refresh with refresh token
 2. If refresh token also expired, request new challenge/signature
 3. Get new JWT tokens
@@ -162,20 +166,21 @@ Response:
 ## Code Examples
 
 ### Login Flow (AuthProvider):
+
 ```typescript
 // 1. Get challenge
 const challengeResponse = await fetch("/api/auth/challenge", {
   method: "POST",
-  body: JSON.stringify({ address })
+  body: JSON.stringify({ address }),
 })
 
-// 2. Sign challenge  
+// 2. Sign challenge
 const signature = await signMessageAsync({ message: challenge })
 
 // 3. Verify and get JWT
 const verifyResponse = await fetch("/api/auth/verify", {
-  method: "POST", 
-  body: JSON.stringify({ address, signature, message: challenge })
+  method: "POST",
+  body: JSON.stringify({ address, signature, message: challenge }),
 })
 
 const { token, refreshToken } = await verifyResponse.json()
@@ -183,15 +188,16 @@ const { token, refreshToken } = await verifyResponse.json()
 ```
 
 ### API Calls (Frontend):
+
 ```typescript
 // Simple and secure!
 const response = await fetch("/api/users", {
   method: "POST",
   headers: {
-    "Authorization": `Bearer ${token}`,
-    "Content-Type": "application/json"
+    Authorization: `Bearer ${token}`,
+    "Content-Type": "application/json",
   },
-  body: JSON.stringify({ name, email, username })
+  body: JSON.stringify({ name, email, username }),
 })
 ```
 
@@ -206,12 +212,12 @@ import { useAuth } from "@/providers/AuthProvider"
 
 function MyComponent() {
   const { makeAuthenticatedRequest } = useAuth()
-  
+
   // This automatically handles token refresh!
   const response = await makeAuthenticatedRequest("/api/users", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, email })
+    body: JSON.stringify({ name, email }),
   })
 }
 ```

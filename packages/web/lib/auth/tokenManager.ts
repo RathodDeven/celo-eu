@@ -11,7 +11,7 @@ export async function makeAuthenticatedRequest(
   onAuthRequired?: () => Promise<boolean>
 ): Promise<Response> {
   const authData = getStoredAuthData()
-  
+
   if (!authData) {
     throw new Error("No authentication data available")
   }
@@ -21,16 +21,16 @@ export async function makeAuthenticatedRequest(
     ...options,
     headers: {
       ...options.headers,
-      "Authorization": `Bearer ${authData.token}`,
+      Authorization: `Bearer ${authData.token}`,
     },
   })
 
   // If token is expired (401), try to refresh
   if (response.status === 401) {
     console.log("Token expired, attempting refresh...")
-    
+
     const refreshed = await refreshAuthToken()
-    
+
     if (refreshed) {
       // Retry the original request with new token
       const newAuthData = getStoredAuthData()
@@ -39,7 +39,7 @@ export async function makeAuthenticatedRequest(
           ...options,
           headers: {
             ...options.headers,
-            "Authorization": `Bearer ${newAuthData.token}`,
+            Authorization: `Bearer ${newAuthData.token}`,
           },
         })
       }
@@ -56,7 +56,7 @@ export async function makeAuthenticatedRequest(
               ...options,
               headers: {
                 ...options.headers,
-                "Authorization": `Bearer ${newAuthData.token}`,
+                Authorization: `Bearer ${newAuthData.token}`,
               },
             })
           }
@@ -98,12 +98,7 @@ async function refreshAuthToken(): Promise<boolean> {
       return false
     }
 
-    const {
-      token,
-      refreshToken,
-      address,
-      expiresAt,
-    } = await response.json()
+    const { token, refreshToken, address, expiresAt } = await response.json()
 
     // Update stored auth data with new tokens
     const newAuthData: AuthData = {
@@ -149,5 +144,5 @@ export function isTokenExpired(authData: AuthData): boolean {
  */
 export function isTokenExpiringSoon(authData: AuthData): boolean {
   const oneHour = 60 * 60 * 1000 // 1 hour in milliseconds
-  return Date.now() > (authData.expiresAt - oneHour)
+  return Date.now() > authData.expiresAt - oneHour
 }

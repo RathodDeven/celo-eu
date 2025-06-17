@@ -21,21 +21,21 @@ import { useAuth } from "@/providers/AuthProvider"
 
 function MyComponent() {
   const { makeAuthenticatedRequest } = useAuth()
-  
+
   const handleApiCall = async () => {
     try {
       // This method automatically handles token refresh!
       const response = await makeAuthenticatedRequest("/api/users", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           name: "John Doe",
-          email: "john@example.com"
-        })
+          email: "john@example.com",
+        }),
       })
-      
+
       if (response.ok) {
         const data = await response.json()
         console.log("API call successful:", data)
@@ -69,9 +69,9 @@ const updateUser = async (userData) => {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
-      "X-Custom-Header": "value"
+      "X-Custom-Header": "value",
     },
-    body: JSON.stringify(userData)
+    body: JSON.stringify(userData),
   })
   return response.json()
 }
@@ -79,7 +79,7 @@ const updateUser = async (userData) => {
 // DELETE request
 const deleteUser = async (userId) => {
   const response = await makeAuthenticatedRequest(`/api/users/${userId}`, {
-    method: "DELETE"
+    method: "DELETE",
   })
   return response.ok
 }
@@ -106,17 +106,20 @@ const deleteUser = async (userId) => {
 ## 🛡️ Security Considerations
 
 ### Token Lifespans
+
 - **Access Token**: 24 hours (short-lived for security)
 - **Refresh Token**: 7 days (longer-lived for convenience)
 - **Challenge**: 30 minutes (time-bound authentication)
 
 ### Security Benefits
+
 - **Minimal Exposure**: Short access token lifespans reduce security window
 - **No Manual Storage**: Reduces risk of developer token mishandling
 - **Automatic Cleanup**: Expired tokens are automatically removed
 - **Graceful Degradation**: System handles all failure scenarios
 
 ### Rate Limiting
+
 - **Token Refresh**: 10 requests per minute per IP
 - **Prevents Abuse**: Rate limiting on refresh endpoint prevents spam
 - **Monitoring**: Failed refresh attempts are logged for security monitoring
@@ -124,12 +127,14 @@ const deleteUser = async (userId) => {
 ## 📱 User Experience
 
 ### What Users Experience
+
 - **Seamless API Calls**: No interruption for token refresh
 - **No Manual Actions**: Never need to "refresh" or "re-login" manually
 - **Minimal Wallet Prompts**: Only sign when both tokens expire (every 7 days max)
 - **Instant Operations**: API calls work immediately without token checks
 
 ### Error Scenarios
+
 - **Network Issues**: Automatic retry with exponential backoff
 - **Token Corruption**: Automatic cleanup and re-authentication
 - **Wallet Disconnection**: Clear auth state and prompt reconnection
@@ -153,12 +158,12 @@ const authContextValue: AuthContextType = {
 
 ```typescript
 interface AuthData {
-  token: string          // JWT access token
-  refreshToken: string   // JWT refresh token  
-  address: string        // Wallet address
-  expiresAt: number     // Token expiration timestamp
-  challengeMessage: string      // Original challenge (for reference)
-  challengeSignature: string    // Original signature (for reference)
+  token: string // JWT access token
+  refreshToken: string // JWT refresh token
+  address: string // Wallet address
+  expiresAt: number // Token expiration timestamp
+  challengeMessage: string // Original challenge (for reference)
+  challengeSignature: string // Original signature (for reference)
 }
 ```
 
@@ -198,15 +203,15 @@ try {
     case "No authentication token available":
       // User not logged in - AuthGuard will handle
       break
-      
+
     case "Authentication required - please sign in again":
       // Both tokens expired - AuthGuard will handle
       break
-      
+
     case "Network request failed":
       // Network issue - retry or show error
       break
-      
+
     default:
       // Other API errors
       console.error("API Error:", error)
@@ -230,6 +235,7 @@ console.log("Manual refresh result:", refreshed)
 ## 📊 Monitoring and Analytics
 
 ### Key Metrics to Track
+
 - Token refresh success rate
 - Frequency of refresh operations
 - Failed refresh attempts
@@ -237,6 +243,7 @@ console.log("Manual refresh result:", refreshed)
 - API call success rate after refresh
 
 ### Logging
+
 ```typescript
 // Successful refresh
 console.log("Token refreshed successfully for address:", address)
@@ -251,12 +258,14 @@ console.log("Expired tokens cleaned up for address:", address)
 ## 🔮 Future Enhancements
 
 ### Planned Improvements
+
 - **Background Token Refresh**: Refresh tokens before they expire (proactive)
 - **Multiple Refresh Tokens**: Support for multiple device sessions
 - **Enhanced Monitoring**: Better analytics and alerting for token issues
 - **Offline Support**: Handle token refresh when app comes back online
 
 ### Advanced Features
+
 - **Token Rotation**: More frequent refresh token rotation for security
 - **Device Fingerprinting**: Enhanced security with device tracking
 - **Session Management**: Better control over multiple login sessions
@@ -265,6 +274,7 @@ console.log("Expired tokens cleaned up for address:", address)
 ## ✅ Best Practices
 
 ### For Developers
+
 1. **Always use `makeAuthenticatedRequest`** for authenticated API calls
 2. **Don't manually handle tokens** - let the system manage them
 3. **Handle authentication errors gracefully** - let AuthGuard manage re-auth
@@ -272,6 +282,7 @@ console.log("Expired tokens cleaned up for address:", address)
 5. **Monitor refresh rates** in production
 
 ### For Production
+
 1. **Set appropriate token lifespans** based on security requirements
 2. **Monitor refresh patterns** for unusual activity
 3. **Implement proper error tracking** for token-related issues
@@ -295,6 +306,7 @@ console.log("Expired tokens cleaned up for address:", address)
 **Solution**: Check localStorage and ensure proper cleanup on errors
 
 ### Debug Checklist
+
 - [ ] Using `makeAuthenticatedRequest` for authenticated calls
 - [ ] AuthGuard wrapping protected components
 - [ ] Environment variables properly configured

@@ -13,11 +13,11 @@ interface ProtectedRouteProps {
   requiresAuth?: boolean
 }
 
-export function ProtectedRoute({ 
-  children, 
+export function ProtectedRoute({
+  children,
   fallback,
   redirectTo,
-  requiresAuth = true 
+  requiresAuth = true,
 }: ProtectedRouteProps) {
   const router = useRouter()
   const pathname = usePathname()
@@ -29,23 +29,29 @@ export function ProtectedRoute({
 
     // Store the current path for redirect after auth
     if (!isConnected || !isSignedIn) {
-      sessionStorage.setItem('returnTo', pathname)
+      sessionStorage.setItem("returnTo", pathname)
     }
 
     // Redirect logic
     if (redirectTo && (!isConnected || !isSignedIn) && !isLoading) {
       router.push(redirectTo)
     }
-  }, [isConnected, isSignedIn, isLoading, router, redirectTo, pathname, requiresAuth])
+  }, [
+    isConnected,
+    isSignedIn,
+    isLoading,
+    router,
+    redirectTo,
+    pathname,
+    requiresAuth,
+  ])
 
   // Show loading state
   if (requiresAuth && isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="animate-spin text-primary" size={48} />
-        <span className="ml-4 text-xl text-muted-foreground">
-          Loading...
-        </span>
+        <span className="ml-4 text-xl text-muted-foreground">Loading...</span>
       </div>
     )
   }
@@ -65,7 +71,9 @@ export function ProtectedRoute({
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
         <h1 className="text-2xl font-bold mb-4">Authentication Required</h1>
-        <p className="text-muted-foreground">Please connect your wallet and sign in.</p>
+        <p className="text-muted-foreground">
+          Please connect your wallet and sign in.
+        </p>
       </div>
     </div>
   )

@@ -1,10 +1,15 @@
-import jwt from 'jsonwebtoken'
+import jwt from "jsonwebtoken"
 
 // JWT Secret - In production, this should be in environment variables
-const JWT_SECRET = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || 'fallback-secret-change-in-production'
+const JWT_SECRET =
+  process.env.JWT_SECRET ||
+  process.env.NEXTAUTH_SECRET ||
+  "fallback-secret-change-in-production"
 
 if (!process.env.JWT_SECRET && !process.env.NEXTAUTH_SECRET) {
-  console.warn('⚠️  JWT_SECRET not set in environment variables. Using fallback secret.')
+  console.warn(
+    "⚠️  JWT_SECRET not set in environment variables. Using fallback secret."
+  )
 }
 
 export interface TokenPayload {
@@ -24,8 +29,8 @@ export function generateAuthToken(address: string): string {
   }
 
   return jwt.sign(payload, JWT_SECRET, {
-    expiresIn: '24h',
-    issuer: 'celo-eu-guild',
+    expiresIn: "24h",
+    issuer: "celo-eu-guild",
     subject: address.toLowerCase(),
   })
 }
@@ -38,7 +43,7 @@ export function verifyAuthToken(token: string): TokenPayload | null {
     const decoded = jwt.verify(token, JWT_SECRET) as TokenPayload
     return decoded
   } catch (error) {
-    console.error('JWT verification failed:', error)
+    console.error("JWT verification failed:", error)
     return null
   }
 }
@@ -53,8 +58,8 @@ export function generateRefreshToken(address: string): string {
   }
 
   return jwt.sign(payload, JWT_SECRET, {
-    expiresIn: '7d',
-    issuer: 'celo-eu-guild',
+    expiresIn: "7d",
+    issuer: "celo-eu-guild",
     subject: address.toLowerCase(),
   })
 }
@@ -66,8 +71,8 @@ export function isTokenExpiringSoon(token: string): boolean {
   try {
     const decoded = jwt.decode(token) as any
     if (!decoded || !decoded.exp) return true
-    
-    const oneHourFromNow = Math.floor(Date.now() / 1000) + (60 * 60)
+
+    const oneHourFromNow = Math.floor(Date.now() / 1000) + 60 * 60
     return decoded.exp < oneHourFromNow
   } catch {
     return true

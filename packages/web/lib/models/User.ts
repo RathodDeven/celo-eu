@@ -80,7 +80,8 @@ const UserSchema: Schema = new Schema(
         },
         message: "Emoji URL must be a valid HTTP/HTTPS URL",
       },
-    },    challenge: {
+    },
+    challenge: {
       message: String,
       timestamp: Number,
     },

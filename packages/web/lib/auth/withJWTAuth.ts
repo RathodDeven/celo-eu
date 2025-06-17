@@ -16,7 +16,7 @@ export function withJWTAuth(
     try {
       // Extract token from Authorization header
       const authHeader = request.headers.get("authorization")
-      
+
       if (!authHeader?.startsWith("Bearer ")) {
         return NextResponse.json(
           { error: "Missing or invalid authorization header" },
@@ -25,7 +25,7 @@ export function withJWTAuth(
       }
 
       const token = authHeader.substring(7) // Remove "Bearer " prefix
-      
+
       if (!token) {
         return NextResponse.json(
           { error: "No token provided" },
@@ -35,7 +35,7 @@ export function withJWTAuth(
 
       // Verify the JWT token
       const payload = verifyAuthToken(token)
-      
+
       if (!payload) {
         return NextResponse.json(
           { error: "Invalid or expired token" },

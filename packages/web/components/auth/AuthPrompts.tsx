@@ -12,15 +12,17 @@ interface WalletConnectionPromptProps {
   className?: string
 }
 
-export function WalletConnectionPrompt({ 
+export function WalletConnectionPrompt({
   title = "Connect Your Wallet",
   description = "Connect your wallet to access this feature.",
-  className = ""
+  className = "",
 }: WalletConnectionPromptProps) {
   const { openConnectModal } = useConnectModal()
 
   return (
-    <div className={`min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-card ${className}`}>
+    <div
+      className={`min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-card ${className}`}
+    >
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -34,12 +36,9 @@ export function WalletConnectionPrompt({
         >
           <Wallet className="text-primary" size={32} />
         </motion.div>
-        <h1 className="text-3xl font-bold text-foreground mb-4">
-          {title}
-        </h1>
-        <p className="text-muted-foreground mb-8">
-          {description}
-        </p>        <Button
+        <h1 className="text-3xl font-bold text-foreground mb-4">{title}</h1>
+        <p className="text-muted-foreground mb-8">{description}</p>{" "}
+        <Button
           title="Connect Wallet"
           onClick={() => openConnectModal?.()}
           size="lg"
@@ -59,20 +58,17 @@ interface SignInPromptProps {
   className?: string
 }
 
-export function SignInPrompt({ 
+export function SignInPrompt({
   title = "Sign In Required",
   description = "Please sign the message to verify your wallet ownership.",
-  className = ""
+  className = "",
 }: SignInPromptProps) {
-  const {
-    isLoading,
-    signIn,
-    error,
-    clearError,
-  } = useAuth()
+  const { isLoading, signIn, error, clearError } = useAuth()
 
   return (
-    <div className={`min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-card ${className}`}>
+    <div
+      className={`min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-card ${className}`}
+    >
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -86,12 +82,9 @@ export function SignInPrompt({
         >
           <User className="text-primary" size={32} />
         </motion.div>
-        <h1 className="text-3xl font-bold text-foreground mb-4">
-          {title}
-        </h1>
-        <p className="text-muted-foreground mb-8">
-          {description}
-        </p>        <Button
+        <h1 className="text-3xl font-bold text-foreground mb-4">{title}</h1>
+        <p className="text-muted-foreground mb-8">{description}</p>{" "}
+        <Button
           title={isLoading ? "Signing In..." : "Sign In"}
           onClick={() => {
             clearError()
