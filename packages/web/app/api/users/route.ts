@@ -122,10 +122,9 @@ async function handlePut(request: VerifiedRequest) {
   try {
     await connectDB()
 
-    // The request.json() now contains the original body *plus* the verifiedAddress
-    // if withSignatureVerification successfully added it.
-    // However, withSignatureVerification already parsed the original body to get signature/message.
-    // The `request.verifiedAddress` is the most reliable source for the address.
+    const bodyData = await request.json()
+
+    // The request.verifiedAddress is the most reliable source for the address.
     const { verifiedAddress } = request
 
     if (!verifiedAddress) {
@@ -135,14 +134,9 @@ async function handlePut(request: VerifiedRequest) {
       )
     }
 
-    // We need to re-parse the original body to get the actual data payload (name, email)
-    // because `withSignatureVerification` doesn't pass the *data* part of the message, only the verified address.
-    // The `message` field in the original request body contains the data we want.
-    const originalBody = await request.json() // This re-reads the stream, which is fine for NextApiRequest but might need cloning for raw Node req
-
-    // The actual data (name, email, etc.) is inside originalBody.message
-    const dataToUpdate = originalBody.message
-    const { name, email } = dataToUpdate as { name?: string; email?: string }
+    // The withSignatureVerification middleware has already processed the body
+    // and the actual data (name, email, etc.) should be directly in bodyData
+    const { name, email } = bodyData as { name?: string; email?: string }
 
     // Basic validation: ensure at least one field to update is provided
     if (name === undefined && email === undefined) {

@@ -156,7 +156,7 @@ export default function DashboardPage() {
           name: editProfileForm.name,
           email: editProfileForm.email,
         },
-        challenge: challengeMessage, // Renamed from originalChallenge for middleware
+        originalChallenge: challengeMessage, // Must match the middleware expectation
         signature: challengeSignature, // The signature of that challengeMessage
         address: address, // Outer address for middleware verification
       }
