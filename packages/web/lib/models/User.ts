@@ -12,6 +12,8 @@ export interface IUser extends Document {
     message: string
     timestamp: number
   }
+  lastVerifiedChallengeHash?: string // For replay attack prevention
+  lastVerified?: Date // Track when user last successfully authenticated
   created_at: Date
   updated_at: Date
 }
@@ -82,6 +84,14 @@ const UserSchema: Schema = new Schema(
     challenge: {
       message: String,
       timestamp: Number,
+    },
+    lastVerifiedChallengeHash: {
+      type: String,
+      // Used to prevent replay attacks
+    },
+    lastVerified: {
+      type: Date,
+      // Track successful authentications
     },
   },
   {

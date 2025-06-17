@@ -1,49 +1,27 @@
 import { NextRequest, NextResponse } from "next/server"
 import connectDB from "@/lib/mongodb"
 import User from "@/lib/models/User"
-import {
-  withSignatureVerification,
-  VerifiedRequest,
-} from "@/lib/auth/verifySignature" // Import VerifiedRequest
+import { withJWTAuth, AuthenticatedRequest } from "@/lib/auth/withJWTAuth"
+import { withRateLimit, rateLimitConfigs } from "@/lib/auth/rateLimit"
 
-// Helper function to handle POST requests, wrapped with signature verification
-// The request type here can be VerifiedRequest if you want to access request.verifiedAddress directly
-const handlePost = async (request: VerifiedRequest) => {
+// POST handler for creating/updating user profiles (JWT authenticated)
+const handlePost = async (request: AuthenticatedRequest) => {
   try {
     await connectDB()
 
-    // The request object is the new one created by withSignatureVerification.
-    // Its body contains the processed data with the verified address.
+    const { verifiedAddress } = request
     const bodyData = await request.json()
 
-    // Destructure from bodyData. The 'address' field here is the verified one.
-    const {
-      address: verifiedAddress, // This is the recoveredAddress from the signature
-      username,
-      email,
-      name,
-      agreedToMarketing,
-    } = bodyData as {
-      // Define a more specific type or cast as needed
-      address: string
+    const { username, email, name, agreedToMarketing } = bodyData as {
       username?: string
       email?: string
       name?: string
       agreedToMarketing?: boolean
-      // Include other potential fields from parsedMessagePayload if they are not top-level
-      data?: any // If parsedMessagePayload was a string and got wrapped
     }
-
-    // You can also use request.verifiedAddress if you prefer, it's the same value
-    // console.log("Address from request.verifiedAddress:", request.verifiedAddress);
-    // console.log("Address from bodyData.address:", verifiedAddress);
 
     if (!verifiedAddress) {
       return NextResponse.json(
-        {
-          error:
-            "Address could not be verified or is missing in processed body.",
-        },
+        { error: "Authentication failed" },
         { status: 401 }
       )
     }
@@ -54,13 +32,13 @@ const handlePost = async (request: VerifiedRequest) => {
     if (username) {
       const existingUserByUsername = await User.findOne({
         username: username.toLowerCase(),
-        address: { $ne: normalizedAddress }, // Exclude current user if they are renaming
+        address: { $ne: normalizedAddress },
       })
 
       if (existingUserByUsername) {
         return NextResponse.json(
           { error: "Username is already taken" },
-          { status: 409 } // 409 Conflict is more appropriate
+          { status: 409 }
         )
       }
     }
@@ -73,7 +51,7 @@ const handlePost = async (request: VerifiedRequest) => {
 
     // Update user information
     if (username) user.username = username.toLowerCase()
-    if (email) user.email = email // Consider email verification flow for production
+    if (email) user.email = email
     if (name) user.name = name
     if (typeof agreedToMarketing === "boolean")
       user.agreedToMarketing = agreedToMarketing
@@ -101,8 +79,8 @@ const handlePost = async (request: VerifiedRequest) => {
           error: `${
             field.charAt(0).toUpperCase() + field.slice(1)
           } is already in use.`,
-        }, // Improved error message
-        { status: 409 } // 409 Conflict
+        },
+        { status: 409 }
       )
     }
     return NextResponse.json(
@@ -115,36 +93,24 @@ const handlePost = async (request: VerifiedRequest) => {
   }
 }
 
-// Wrap the handler with the verification middleware
-export const POST = withSignatureVerification(handlePost)
-
-async function handlePut(request: VerifiedRequest) {
+// PUT handler for updating user profiles (JWT authenticated)
+async function handlePut(request: AuthenticatedRequest) {
   try {
     await connectDB()
 
-    // The request.json() now contains the original body *plus* the verifiedAddress
-    // if withSignatureVerification successfully added it.
-    // However, withSignatureVerification already parsed the original body to get signature/message.
-    // The `request.verifiedAddress` is the most reliable source for the address.
     const { verifiedAddress } = request
+    const bodyData = await request.json()
 
     if (!verifiedAddress) {
       return NextResponse.json(
-        { error: "Address could not be verified from signature." },
+        { error: "Authentication failed" },
         { status: 401 }
       )
     }
 
-    // We need to re-parse the original body to get the actual data payload (name, email)
-    // because `withSignatureVerification` doesn't pass the *data* part of the message, only the verified address.
-    // The `message` field in the original request body contains the data we want.
-    const originalBody = await request.json() // This re-reads the stream, which is fine for NextApiRequest but might need cloning for raw Node req
+    const { name, email } = bodyData as { name?: string; email?: string }
 
-    // The actual data (name, email, etc.) is inside originalBody.message
-    const dataToUpdate = originalBody.message
-    const { name, email } = dataToUpdate as { name?: string; email?: string }
-
-    // Basic validation: ensure at least one field to update is provided
+    // Basic validation
     if (name === undefined && email === undefined) {
       return NextResponse.json(
         {
@@ -154,7 +120,7 @@ async function handlePut(request: VerifiedRequest) {
         { status: 400 }
       )
     }
-    // Add more specific validation if needed (e.g., email format)
+
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json(
         { error: "Invalid email format" },
@@ -169,7 +135,7 @@ async function handlePut(request: VerifiedRequest) {
       return NextResponse.json({ error: "User not found." }, { status: 404 })
     }
 
-    // Update fields if they are provided in the request body
+    // Update fields
     if (name !== undefined) user.name = name
     if (email !== undefined) user.email = email
 
@@ -189,18 +155,6 @@ async function handlePut(request: VerifiedRequest) {
     })
   } catch (error: any) {
     console.error("Update user error:", error)
-    if (error.code === 11000) {
-      // Handle potential unique constraint errors if any
-      const field = Object.keys(error.keyPattern)[0]
-      return NextResponse.json(
-        {
-          error: `${
-            field.charAt(0).toUpperCase() + field.slice(1)
-          } is already in use.`,
-        },
-        { status: 409 }
-      )
-    }
     return NextResponse.json(
       {
         error: "Internal server error while updating user data.",
@@ -211,7 +165,16 @@ async function handlePut(request: VerifiedRequest) {
   }
 }
 
-export const PUT = withSignatureVerification(handlePut)
+// Apply JWT authentication and rate limiting
+export const POST = withRateLimit(
+  withJWTAuth(handlePost),
+  rateLimitConfigs.userUpdate
+)
+
+export const PUT = withRateLimit(
+  withJWTAuth(handlePut),
+  rateLimitConfigs.userUpdate
+)
 
 export async function GET(request: NextRequest) {
   try {

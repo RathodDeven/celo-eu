@@ -1,11 +1,12 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
+import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { motion } from "framer-motion"
 import { useAccount, useReadContract } from "wagmi"
 import { useAuth } from "@/providers/AuthProvider"
-import { useConnectModal } from "@rainbow-me/rainbowkit"
+import { AuthGuard } from "@/components/auth/AuthGuard"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -36,7 +37,6 @@ import {
   nexusExplorerAddress,
   nexusExplorerAbi,
 } from "@/lib/abi/NexusExplorerBadge"
-import { useRouter } from "next/navigation"
 
 interface UserProfile {
   name?: string
@@ -50,19 +50,13 @@ interface EditProfileFormData {
   email: string
 }
 
-export default function DashboardPage() {
+function DashboardContent() {
   const router = useRouter()
   const { address, isConnected } = useAccount()
   const {
     isSignedIn,
-    isLoading: authLoading,
-    signIn,
-    error: authError,
-    clearError: clearAuthError,
-    challengeMessage, // For signing update requests
-    challengeSignature, // For signing update requests
+    makeAuthenticatedRequest, // Use the new authenticated request method
   } = useAuth()
-  const { openConnectModal } = useConnectModal()
 
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [userProfileLoading, setUserProfileLoading] = useState(true) // Start true
@@ -88,8 +82,7 @@ export default function DashboardPage() {
       enabled: !!address && isConnected && isSignedIn,
     },
   })
-
-  const fetchUserProfile = async () => {
+  const fetchUserProfile = useCallback(async () => {
     if (isSignedIn && address) {
       setUserProfileLoading(true)
       try {
@@ -119,18 +112,17 @@ export default function DashboardPage() {
       setUserProfile(null)
       setUserProfileLoading(false)
     }
-  }
+  }, [isSignedIn, address])
 
   useEffect(() => {
     fetchUserProfile()
-  }, [isSignedIn, address])
+  }, [fetchUserProfile])
 
   useEffect(() => {
     if (isSignedIn) {
       refetchExplorerBadge()
     }
   }, [isSignedIn, refetchExplorerBadge])
-
   const handleEditProfileInputChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -140,7 +132,7 @@ export default function DashboardPage() {
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!address || !challengeMessage || !challengeSignature) {
+    if (!address) {
       setEditProfileError(
         "Authentication details are missing. Please re-authenticate."
       )
@@ -150,21 +142,16 @@ export default function DashboardPage() {
     setEditProfileError(null)
 
     try {
-      const payload = {
-        message: {
-          // Data to update
+      // Use authenticated request with automatic token refresh
+      const response = await makeAuthenticatedRequest("/api/users", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
           name: editProfileForm.name,
           email: editProfileForm.email,
-        },
-        challenge: challengeMessage, // Renamed from originalChallenge for middleware
-        signature: challengeSignature, // The signature of that challengeMessage
-        address: address, // Outer address for middleware verification
-      }
-
-      const response = await fetch("/api/users", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        }),
       })
 
       if (!response.ok) {
@@ -173,13 +160,12 @@ export default function DashboardPage() {
       }
 
       const updatedUserData = await response.json()
-      setUserProfile(updatedUserData.user) // Update local profile state
+      setUserProfile(updatedUserData.user)
       setEditProfileForm({
-        // Reset form with new data or keep it as is if preferred
         name: updatedUserData.user.name || "",
         email: updatedUserData.user.email || "",
       })
-      setIsEditProfileOpen(false) // Close dialog on success
+      setIsEditProfileOpen(false)
     } catch (error: any) {
       console.error("Update profile error:", error)
       setEditProfileError(error.message || "Something went wrong")
@@ -187,105 +173,13 @@ export default function DashboardPage() {
       setIsUpdatingProfile(false)
     }
   }
-
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
   }
 
-  if (!isConnected) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-card">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center p-8 max-w-md mx-auto bg-card rounded-xl shadow-2xl"
-        >
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: "spring" }}
-            className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6"
-          >
-            <Wallet className="text-primary" size={32} />
-          </motion.div>
-          <h1 className="text-3xl font-bold text-foreground mb-4">
-            Connect Your Wallet
-          </h1>
-          <p className="text-muted-foreground mb-8">
-            Connect your wallet to access your Celo Europe Dashboard.
-          </p>
-          <Button
-            title="Connect Wallet"
-            onClick={() => openConnectModal?.()}
-            size="lg"
-            className="w-full bg-primary text-primary-foreground shadow hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-          >
-            <Wallet className="mr-2 h-5 w-5" />
-            Connect Wallet
-          </Button>
-        </motion.div>
-      </div>
-    )
-  }
-
-  if (!isSignedIn) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-card">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center p-8 max-w-md mx-auto bg-card rounded-xl shadow-2xl"
-        >
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: "spring" }}
-            className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6"
-          >
-            <User className="text-primary" size={32} />
-          </motion.div>
-          <h1 className="text-3xl font-bold text-foreground mb-4">
-            Sign In Required
-          </h1>
-          <p className="text-muted-foreground mb-8">
-            Please sign the message to verify your wallet ownership and access
-            your dashboard.
-          </p>
-          <Button
-            title={authLoading ? "Signing In..." : "Sign In"}
-            onClick={() => {
-              clearAuthError()
-              signIn()
-            }}
-            disabled={authLoading}
-            loading={authLoading}
-            size="lg"
-            className="w-full bg-primary text-primary-foreground shadow hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {authLoading ? (
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-            ) : (
-              <User className="mr-2 h-5 w-5" />
-            )}
-            {authLoading ? "Signing In..." : "Sign In"}
-          </Button>
-          {authError && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg"
-            >
-              <p className="text-destructive text-sm">{authError}</p>
-            </motion.div>
-          )}
-        </motion.div>
-      </div>
-    )
-  }
-
   // Main content loading state
-  if (authLoading || userProfileLoading || explorerLoading) {
+  if (userProfileLoading || explorerLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="animate-spin text-primary" size={48} />
@@ -546,7 +440,15 @@ export default function DashboardPage() {
             </Button>
           </motion.div>
         </div>
-      </div>
+      </div>{" "}
     </div>
+  )
+}
+
+export default function DashboardPage() {
+  return (
+    <AuthGuard>
+      <DashboardContent />
+    </AuthGuard>
   )
 }

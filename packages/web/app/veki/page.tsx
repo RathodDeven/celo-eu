@@ -1,13 +1,13 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useAccount } from "wagmi"
-import { useConnectModal } from "@rainbow-me/rainbowkit"
+import { useAccount, useChainId } from "wagmi"
 import {
   useReadContract,
-  useWriteContract,
+  useSendTransaction,
   useWaitForTransactionReceipt,
 } from "wagmi"
+import { encodeFunctionData } from "viem"
 import { useState, useEffect } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import Image from "next/image"
@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
+import { AuthGuard } from "@/components/auth/AuthGuard"
 
 import {
   AlertCircle,
@@ -31,11 +32,8 @@ import {
   Mail,
   MessageSquare,
   ShieldCheck,
-  User,
   UserCircle,
   UserPlus,
-  Wallet,
-  CheckCircle,
   PartyPopper,
 } from "lucide-react"
 
@@ -44,6 +42,7 @@ import {
   nexusExplorerAbi,
 } from "@/lib/abi/NexusExplorerBadge"
 import { useAuth } from "@/providers/AuthProvider"
+import { getDivviDataSuffix, submitDivviReferral } from "@/lib/divvi-utils"
 
 interface FormData {
   name: string
@@ -51,20 +50,14 @@ interface FormData {
   email: string
 }
 
-export default function VekiProgram() {
+function VekiProgramContent() {
   const router = useRouter()
   const { address, isConnected } = useAccount()
+  const chainId = useChainId()
   const {
     isSignedIn,
-    isLoading,
-    signIn,
-    error,
-    clearError,
-    challengeMessage,
-    challengeSignature,
+    makeAuthenticatedRequest, // Use the new authenticated request method
   } = useAuth()
-  const { openConnectModal } = useConnectModal()
-
   // Contract interactions
   const { data: hasMinted, refetch: refetchHasMinted } = useReadContract({
     address: nexusExplorerAddress,
@@ -79,16 +72,23 @@ export default function VekiProgram() {
   })
 
   const {
-    writeContract,
+    sendTransaction,
     data: hash,
     error: mintError,
     isPending: isMinting,
-  } = useWriteContract()
+  } = useSendTransaction()
 
   const { isLoading: isConfirming, isSuccess: isConfirmed } =
     useWaitForTransactionReceipt({
       hash,
     })
+
+  // Submit Divvi referral after successful transaction
+  useEffect(() => {
+    if (isConfirmed && hash) {
+      submitDivviReferral(hash, chainId)
+    }
+  }, [isConfirmed, hash, chainId])
 
   // Component state
   const [currentStep, setCurrentStep] = useState(1)
@@ -202,31 +202,11 @@ export default function VekiProgram() {
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
-    setFormErrors({})
-
-    // Client-side checks for critical authentication data
+    setFormErrors({}) // Client-side checks for critical authentication data
     if (!address) {
       console.error("Form submission error: Wallet address is missing.")
       setFormErrors({
         terms: "Wallet address is not available. Please reconnect.",
-      })
-      setIsSubmitting(false)
-      return
-    }
-    if (!challengeMessage) {
-      console.error("Form submission error: Challenge message is missing.")
-      setFormErrors({
-        terms:
-          "Authentication challenge is missing. Please try signing in again.",
-      })
-      setIsSubmitting(false)
-      return
-    }
-    if (!challengeSignature) {
-      console.error("Form submission error: Challenge signature is missing.")
-      setFormErrors({
-        terms:
-          "Authentication signature is missing. Please try signing in again.",
       })
       setIsSubmitting(false)
       return
@@ -263,25 +243,18 @@ export default function VekiProgram() {
         })
         setIsSubmitting(false)
         return
-      }
-
-      const payload = {
-        message: {
-          address, // Inner address for the message payload
-          ...formData,
-          agreedToMarketing,
-        },
-        signature: challengeSignature,
-        originalChallenge: challengeMessage,
-        address: address, // Outer address for middleware verification
-      }
-
-      console.log("Submitting to /api/users with payload:", payload) // Log the payload
-
-      const response = await fetch("/api/users", {
+      } // Use authenticated request with automatic token refresh
+      const response = await makeAuthenticatedRequest("/api/users", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: formData.username,
+          email: formData.email,
+          name: formData.name,
+          agreedToMarketing,
+        }),
       })
 
       if (!response.ok) {
@@ -299,14 +272,31 @@ export default function VekiProgram() {
     }
   }
 
-  const handleMintBadge = () => {
+  const handleMintBadge = async () => {
     if (!address) return
 
-    writeContract({
-      address: nexusExplorerAddress,
-      abi: nexusExplorerAbi,
-      functionName: "mintExplorerBadge",
-    })
+    try {
+      // Get the Divvi referral data suffix
+      const dataSuffix = getDivviDataSuffix()
+
+      // Encode the original function call
+      const originalData = encodeFunctionData({
+        abi: nexusExplorerAbi,
+        functionName: "mintExplorerBadge",
+        args: [],
+      })
+
+      // Append the Divvi referral suffix
+      const dataWithReferral = (originalData + dataSuffix) as `0x${string}`
+
+      // Use sendTransaction to include custom data with Divvi referral
+      sendTransaction({
+        to: nexusExplorerAddress,
+        data: dataWithReferral,
+      })
+    } catch (error) {
+      console.error("Minting error:", error)
+    }
   }
 
   const stepVariants = {
@@ -321,98 +311,6 @@ export default function VekiProgram() {
       y: 0,
       transition: { duration: 0.5 },
     },
-  }
-
-  if (!isConnected) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-card">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center p-8 max-w-md mx-auto"
-        >
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: "spring" }}
-            className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6"
-          >
-            <Wallet className="text-primary" size={32} />
-          </motion.div>
-          <h1 className="text-3xl font-bold text-foreground mb-4">
-            Connect Your Wallet
-          </h1>
-          <p className="text-muted-foreground mb-8">
-            Connect your wallet to access the Veki Program and claim your
-            Explorer Badge.
-          </p>
-          <Button
-            title="Connect Wallet"
-            onClick={() => openConnectModal?.()}
-            size="lg"
-            className="w-full bg-primary text-primary-foreground shadow hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-          >
-            <Wallet className="mr-2 h-5 w-5" />
-            Connect Wallet
-          </Button>
-        </motion.div>
-      </div>
-    )
-  }
-
-  if (!isSignedIn) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-card">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center p-8 max-w-md mx-auto"
-        >
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: "spring" }}
-            className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6"
-          >
-            <User className="text-primary" size={32} />
-          </motion.div>
-          <h1 className="text-3xl font-bold text-foreground mb-4">
-            Sign In Required
-          </h1>
-          <p className="text-muted-foreground mb-8">
-            Please sign the message to verify your wallet ownership and access
-            the Veki Program.
-          </p>
-          <Button
-            title={isLoading ? "Signing In..." : "Sign In"}
-            onClick={() => {
-              clearError()
-              signIn()
-            }}
-            disabled={isLoading}
-            loading={isLoading}
-            size="lg"
-            className="w-full bg-primary text-primary-foreground shadow hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isLoading ? (
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-            ) : (
-              <User className="mr-2 h-5 w-5" />
-            )}
-            {isLoading ? "Signing In..." : "Sign In"}
-          </Button>
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg"
-            >
-              <p className="text-destructive text-sm">{error}</p>
-            </motion.div>
-          )}
-        </motion.div>
-      </div>
-    )
   }
 
   if (hasMinted || isConfirmed) {
@@ -435,8 +333,8 @@ export default function VekiProgram() {
             Congratulations!
           </h1>
           <p className="text-muted-foreground text-lg mb-8">
-            You've successfully minted your Nexus Explorer Badge! Welcome to the
-            Celo Europe Guild.
+            You&apos;ve successfully minted your Nexus Explorer Badge! Welcome
+            to the Celo Europe Guild.
           </p>
           <motion.img
             src="/explorer badge.png" // Make sure this path is correct
@@ -499,7 +397,7 @@ export default function VekiProgram() {
             The Veki Program
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Join Celo Europe's community-powered badge system. Collect your
+            Join Celo Europe&apos;s community-powered badge system. Collect your
             Explorer Badge and shape decentralized regenerative solutions across
             Europe.
           </p>
@@ -768,8 +666,9 @@ export default function VekiProgram() {
                     variants={itemVariants}
                     className="text-muted-foreground mb-6"
                   >
-                    You're one step away! Mint your exclusive Nexus Explorer
-                    Badge NFT to mark your entry into the Celo Europe ecosystem.
+                    You&apos;re one step away! Mint your exclusive Nexus
+                    Explorer Badge NFT to mark your entry into the Celo Europe
+                    ecosystem.
                   </motion.p>
                   <motion.div
                     variants={itemVariants}
@@ -956,5 +855,13 @@ export default function VekiProgram() {
         </AnimatePresence>
       </div>
     </div>
+  )
+}
+
+export default function VekiProgram() {
+  return (
+    <AuthGuard>
+      <VekiProgramContent />
+    </AuthGuard>
   )
 }

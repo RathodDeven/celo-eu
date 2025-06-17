@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server"
 import crypto from "crypto"
 import connectDB from "@/lib/mongodb"
 import User from "@/lib/models/User"
+import { withRateLimit, rateLimitConfigs } from "@/lib/auth/rateLimit"
 
-export async function POST(request: NextRequest) {
+async function handleChallenge(request: NextRequest) {
   try {
     await connectDB()
 
@@ -80,3 +81,6 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
+// Apply rate limiting to the challenge endpoint
+export const POST = withRateLimit(handleChallenge, rateLimitConfigs.challenge)
