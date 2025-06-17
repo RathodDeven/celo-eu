@@ -1,21 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 import { verifyMessage } from "viem"
-import crypto from "crypto"
 import connectDB from "@/lib/mongodb"
 import User from "@/lib/models/User"
+import { generateAuthToken, generateRefreshToken } from "@/lib/auth/jwt"
+import { withRateLimit, rateLimitConfigs } from "@/lib/auth/rateLimit"
 
-// Simple token generation using crypto instead of JWT
-const generateAuthToken = (address: string) => {
-  const payload = {
-    address: address.toLowerCase(),
-    timestamp: Date.now(),
-    nonce: crypto.randomBytes(16).toString("hex"),
-  }
-  const token = Buffer.from(JSON.stringify(payload)).toString("base64")
-  return token
-}
-
-export async function POST(request: NextRequest) {
+async function handleVerify(request: NextRequest) {
   try {
     await connectDB()
 
@@ -75,9 +65,7 @@ export async function POST(request: NextRequest) {
         { error: "Challenge has expired. Please request a new challenge." },
         { status: 400 }
       )
-    }
-
-    // Verify that the message matches the stored challenge
+    }    // Verify that the message matches the stored challenge
     if (message !== user.challenge.message) {
       console.log(`[VERIFY] Message mismatch for address: ${normalizedAddress}`)
       console.log(
@@ -86,6 +74,19 @@ export async function POST(request: NextRequest) {
       console.log(`[VERIFY] Received message length: ${message.length}`)
       return NextResponse.json(
         { error: "Message does not match challenge" },
+        { status: 400 }
+      )
+    }
+
+    // Check for replay attacks by comparing against last verified challenge
+    const currentChallengeHash = require('crypto').createHash('sha256')
+      .update(user.challenge.message + user.challenge.timestamp)
+      .digest('hex')
+    
+    if (user.lastVerifiedChallengeHash === currentChallengeHash) {
+      console.log(`[VERIFY] Replay attack detected for address: ${normalizedAddress}`)
+      return NextResponse.json(
+        { error: "This challenge has already been used" },
         { status: 400 }
       )
     }
@@ -119,20 +120,26 @@ export async function POST(request: NextRequest) {
       console.log(
         `[VERIFY] Signature verified successfully for address: ${normalizedAddress}`
       )
-
-      // Only remove the challenge after successful verification
-      user.challenge = undefined
-      await user.save()
-      console.log(
-        `[VERIFY] Challenge removed for address: ${normalizedAddress}`
-      )
-
-      // Generate auth token
+    // Only remove the challenge after successful verification
+    // Also track used challenge to prevent replay attacks even if database fails
+    const challengeHash = require('crypto').createHash('sha256')
+      .update(user.challenge.message + user.challenge.timestamp)
+      .digest('hex')
+    
+    user.challenge = undefined
+    user.lastVerifiedChallengeHash = challengeHash
+    user.lastVerified = new Date()
+    await user.save()
+    console.log(
+      `[VERIFY] Challenge removed for address: ${normalizedAddress}`
+    )// Generate secure JWT tokens
       const token = generateAuthToken(address)
+      const refreshToken = generateRefreshToken(address)
 
       return NextResponse.json({
         success: true,
         token,
+        refreshToken,
         address: normalizedAddress,
         expiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours in milliseconds
       })
@@ -148,7 +155,9 @@ export async function POST(request: NextRequest) {
     console.error("Verification error:", error)
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
-    )
+      { status: 500 }    )
   }
 }
+
+// Apply rate limiting to the verify endpoint
+export const POST = withRateLimit(handleVerify, rateLimitConfigs.verify)

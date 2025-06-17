@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from "next/server"
 import { ethers } from "ethers"
 
-// This is a simplified example. In a real app, you'd want to manage nonces to prevent replay attacks.
-// You might also want to store the public key or a hash of it, rather than the address itself,
-// depending on your security model.
+// Nonce tracking to prevent replay attacks
+const usedNonces = new Set<string>()
+const MAX_NONCE_AGE = 30 * 60 * 1000 // 30 minutes
 
-// Export this interface so handlers can use it if they want to type the request explicitly
+// Clean up old nonces periodically
+setInterval(() => {
+  // In production, this should be handled by a proper cache/database cleanup
+  usedNonces.clear()
+}, MAX_NONCE_AGE)
+
 export interface VerifiedRequest extends NextRequest {
-  verifiedAddress?: string // Explicitly carry the verified address
+  verifiedAddress?: string
 }
 
 export function withSignatureVerification(
@@ -31,9 +36,7 @@ export function withSignatureVerification(
         { error: "Invalid JSON in request body" },
         { status: 400 }
       )
-    }
-
-    try {
+    }    try {
       const {
         signature,
         message,
@@ -48,10 +51,32 @@ export function withSignatureVerification(
         )
       }
 
-      let parsedMessagePayload = message // This is the structured data part of the request
+      // Validate request origin and timestamp for additional security
+      const origin = request.headers.get('origin')
+      const referer = request.headers.get('referer')
+      
+      // In production, validate against allowed origins
+      const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000']
+      
+      if (origin && !allowedOrigins.some(allowed => origin.includes(allowed))) {
+        console.warn(`Suspicious request from origin: ${origin}`)
+        // In production, you might want to reject this
+        // return NextResponse.json({ error: "Unauthorized origin" }, { status: 403 })
+      }
+
+      let parsedMessagePayload = message
       const messageToVerifyAgainstSignature =
         originalChallenge ||
         (typeof message === "string" ? message : JSON.stringify(message))
+
+      // Generate a nonce from the message to prevent replay attacks
+      const messageHash = ethers.keccak256(ethers.toUtf8Bytes(messageToVerifyAgainstSignature))
+      if (usedNonces.has(messageHash)) {
+        return NextResponse.json(
+          { error: "Message has already been used (replay attack protection)" },
+          { status: 400 }
+        )
+      }
 
       if (
         typeof parsedMessagePayload === "object" &&
@@ -89,14 +114,10 @@ export function withSignatureVerification(
             { status: 400 }
           )
         }
-      }
-
-      if (
+      }      if (
         recoveredAddress.toLowerCase() !==
         providedAddressInOriginalBody.toLowerCase()
       ) {
-        // Double check: The address recovered from signature must match the address that claimed to send the message.
-        // The `providedAddressInOriginalBody` is the one the client initially sent.
         return NextResponse.json(
           {
             error:
@@ -105,6 +126,9 @@ export function withSignatureVerification(
           { status: 401 }
         )
       }
+
+      // Mark this message as used to prevent replay attacks
+      usedNonces.add(messageHash)
 
       // Construct the new body for the downstream handler
       const {

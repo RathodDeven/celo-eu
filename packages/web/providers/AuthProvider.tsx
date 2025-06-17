@@ -10,7 +10,7 @@ import React, {
 } from "react"
 import { useAccount, useSignMessage } from "wagmi"
 
-interface AuthContextType {
+interface AuthState {
   isSignedIn: boolean
   isLoading: boolean
   error: string | null
@@ -18,6 +18,9 @@ interface AuthContextType {
   signedAddress: string | null
   challengeMessage: string | null
   challengeSignature: string | null
+}
+
+interface AuthContextType extends AuthState {
   signIn: () => Promise<boolean>
   clearError: () => void
   updateUserProfile: (
@@ -26,10 +29,13 @@ interface AuthContextType {
   ) => Promise<boolean>
   isWalletConnected: boolean
   connectedAddress: string | undefined
+  makeAuthenticatedRequest: (url: string, options?: RequestInit) => Promise<Response>
+  refreshToken: () => Promise<boolean>
 }
 
-interface AuthData {
+export interface AuthData {
   token: string
+  refreshToken: string
   address: string
   expiresAt: number
   challengeMessage: string
@@ -40,19 +46,10 @@ const AUTH_STORAGE_KEY = "celo-eu-auth"
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const { address, isConnected } = useAccount()
+export function AuthProvider({ children }: { children: ReactNode }) {  const { address, isConnected } = useAccount()
   const { signMessageAsync } = useSignMessage()
-  const [authState, setAuthState] = useState<
-    Omit<
-      AuthContextType,
-      | "signIn"
-      | "clearError"
-      | "updateUserProfile"
-      | "isWalletConnected"
-      | "connectedAddress"
-    >
-  >({
+  
+  const [authState, setAuthState] = useState<AuthState>({
     isSignedIn: false,
     isLoading: false,
     error: null,
@@ -315,10 +312,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(
           "Failed to verify signature after multiple retries or unrecoverable error."
         )
-      }
-
-      const {
+      }      const {
         token,
+        refreshToken,
         address: verifiedAddress,
         expiresAt,
       } = await verifyResponse.json()
@@ -327,6 +323,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Step 4: Store auth data
       const authData: AuthData = {
         token,
+        refreshToken,
         address: verifiedAddress,
         expiresAt,
         challengeMessage: challengeToSign, // Store challenge message
@@ -345,6 +342,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         challengeSignature: signedChallengeHex,
       })
 
+      // Handle return URL after successful authentication
+      const returnTo = sessionStorage.getItem('returnTo')
+      if (returnTo) {
+        sessionStorage.removeItem('returnTo')
+        window.location.href = returnTo
+      }
+
       return true
     } catch (error: any) {
       console.error("Sign in error:", error)
@@ -358,7 +362,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return false
     }
   }, [address, isConnected, signMessageAsync])
-
   const updateUserProfile = useCallback(
     async (
       currentData: { name?: string; email?: string },
@@ -366,7 +369,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ) => {
       setAuthState((prev) => ({ ...prev, isLoading: true, error: null }))
 
-      // Check 1: Wallet connected? (using address and isConnected from useAccount)
+      // Check 1: Wallet connected?
       if (!address || !isConnected) {
         setAuthState((prev) => ({
           ...prev,
@@ -376,7 +379,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return false
       }
 
-      // Check 2: User authenticated in app state?
+      // Check 2: User authenticated?
       if (!authState.token || !authState.signedAddress) {
         setAuthState((prev) => ({
           ...prev,
@@ -386,53 +389,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return false
       }
 
-      // Check 3: Is the operation for the currently authenticated user's address?
-      if (authState.signedAddress.toLowerCase() !== userAddress.toLowerCase()) {
-        setAuthState((prev) => ({
-          ...prev,
-          isLoading: false,
-          error:
-            "Mismatch in user address for update. Operation intended for a different user.",
-        }))
-        return false
-      }
-
-      // Check 4: CRITICAL - Does the currently connected wallet match the authenticated user?
+      // Check 3: Address match?
       if (address.toLowerCase() !== authState.signedAddress.toLowerCase()) {
         setAuthState((prev) => ({
           ...prev,
           isLoading: false,
           error:
-            "Connected wallet does not match the authenticated user. Please use the wallet you signed in with or sign in again.",
+            "Connected wallet does not match the authenticated user. Please sign in again.",
         }))
         return false
       }
 
-      // If all checks pass, 'address' (from useAccount) is the correct, verified address to use.
-      const messageData = {
-        address: address, // Use current connected address
-        name: currentData.name,
-        email: currentData.email,
-        timestamp: Date.now(),
-      }
-      const messageToSign = JSON.stringify(messageData)
-
       try {
-        const signature = await signMessageAsync({ message: messageToSign })
-
-        const payload = {
-          message: messageData,
-          signature: signature,
-          address: address, // Use current connected address
-        }
-
+        // Simple API call with JWT token - no signature verification needed!
         const response = await fetch("/api/users", {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            // Authorization: `Bearer ${authState.token}`, // Include if your API also uses token
+            "Authorization": `Bearer ${authState.token}`, // Use JWT token
           },
-          body: JSON.stringify(payload),
+          body: JSON.stringify({
+            name: currentData.name,
+            email: currentData.email,
+          }),
         })
 
         const result = await response.json()
@@ -446,10 +425,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return false
         }
 
-        // Update user information in authState if necessary, e.g., if name/email is stored there
-        // For now, just clear loading and error.
         setAuthState((prev) => ({ ...prev, isLoading: false, error: null }))
-        // console.log("Profile updated successfully:", result);
         return true
       } catch (e: any) {
         console.error("Update profile error:", e)
@@ -467,7 +443,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isConnected,
       authState.token,
       authState.signedAddress,
-      signMessageAsync,
     ]
   )
 
@@ -475,14 +450,122 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAuthState((prev) => ({ ...prev, error: null }))
   }, [])
 
+  // Refresh token method
+  const refreshAuthToken = useCallback(async (): Promise<boolean> => {
+    try {
+      const storedAuth = localStorage.getItem(AUTH_STORAGE_KEY)
+      if (!storedAuth) return false
+
+      const authData: AuthData = JSON.parse(storedAuth)
+      if (!authData.refreshToken) return false
+
+      const response = await fetch("/api/auth/refresh", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refreshToken: authData.refreshToken }),
+      })
+
+      if (!response.ok) {
+        localStorage.removeItem(AUTH_STORAGE_KEY)
+        setAuthState({
+          isSignedIn: false,
+          isLoading: false,
+          error: null,
+          token: null,
+          signedAddress: null,
+          challengeMessage: null,
+          challengeSignature: null,
+        })
+        return false
+      }
+
+      const { token, refreshToken, address: verifiedAddress, expiresAt } = await response.json()
+
+      const newAuthData: AuthData = {
+        ...authData,
+        token,
+        refreshToken,
+        address: verifiedAddress,
+        expiresAt,
+      }
+
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newAuthData))
+      setAuthState(prev => ({
+        ...prev,
+        token,
+        signedAddress: verifiedAddress,
+      }))
+
+      return true
+    } catch (error) {
+      console.error("Token refresh error:", error)
+      localStorage.removeItem(AUTH_STORAGE_KEY)
+      setAuthState({
+        isSignedIn: false,
+        isLoading: false,
+        error: null,
+        token: null,
+        signedAddress: null,
+        challengeMessage: null,
+        challengeSignature: null,
+      })
+      return false
+    }
+  }, [])
+
+  // Authenticated request method with automatic refresh
+  const makeAuthenticatedRequest = useCallback(async (
+    url: string,
+    options: RequestInit = {}
+  ): Promise<Response> => {
+    if (!authState.token) {
+      throw new Error("No authentication token available")
+    }
+
+    // First attempt with current token
+    let response = await fetch(url, {
+      ...options,
+      headers: {
+        ...options.headers,
+        "Authorization": `Bearer ${authState.token}`,
+      },
+    })
+
+    // If unauthorized, try to refresh token
+    if (response.status === 401) {
+      const refreshed = await refreshAuthToken()
+      
+      if (refreshed) {
+        // Retry with new token
+        const newAuthData = localStorage.getItem(AUTH_STORAGE_KEY)
+        if (newAuthData) {
+          const { token } = JSON.parse(newAuthData) as AuthData
+          response = await fetch(url, {
+            ...options,
+            headers: {
+              ...options.headers,
+              "Authorization": `Bearer ${token}`,
+            },
+          })
+        }
+      } else {
+        // Refresh failed, need to re-authenticate
+        throw new Error("Authentication required - please sign in again")
+      }
+    }
+
+    return response
+  }, [authState.token, refreshAuthToken])
   // Combine all state and functions into a single context value
-  const authContextValue = {
+  const authContextValue: AuthContextType = {
     ...authState,
     signIn,
     clearError,
     updateUserProfile,
     isWalletConnected: isConnected,
     connectedAddress: address,
+    makeAuthenticatedRequest,
+    refreshToken: refreshAuthToken,
   }
 
   return (

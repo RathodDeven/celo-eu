@@ -292,7 +292,7 @@ export default function Home() {
               variants={fadeIn}
               className="text-lg text-muted-foreground max-w-3xl mx-auto"
             >
-              Veki is Celo Europe's community-powered badge system. By
+              Veki is Celo Europe&apos;s community-powered badge system. By
               collecting a Veki badge, you join the movement to shape
               decentralized regenerative solutions across Europe.
             </motion.p>
@@ -332,7 +332,7 @@ export default function Home() {
                 </div>
 
                 <p className="text-muted-foreground mb-8">
-                  The first level of our membership is the Explorer Pass. It's
+                  The first level of our membership is the Explorer Pass. It&apos;s
                   open to anyone and can be minted directly from our dashboard.
                 </p>
 
