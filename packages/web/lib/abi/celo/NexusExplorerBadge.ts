@@ -852,4 +852,4 @@ export const nexusExplorerAbi = [
   },
 ]
 // Celo mainnet (production) address - Replace with actual mainnet address when deployed
-export const nexusExplorerAddress = "0xYOUR_MAINNET_CONTRACT_ADDRESS_HERE"
+export const nexusExplorerAddress = "0x36FdB2cA630eb606ED7BE343a9ebF8AEcc5A24EC"
