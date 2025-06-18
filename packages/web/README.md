@@ -45,14 +45,46 @@ Required environment variables in `.env.local`:
 JWT_SECRET=your-super-secret-jwt-key-minimum-32-characters
 ALLOWED_ORIGINS=http://localhost:3000,https://yourdomain.com
 
-# Database
-MONGO_DB_URI=mongodb://localhost:27017/celo-eu
+# MongoDB Configuration
+MONGO_DB_URI_PRODUCTION=mongodb://localhost:27017/celo-eu-production
+MONGO_DB_URI_DEVELOPMENT=mongodb://localhost:27017/celo-eu-development
 
 # Web3
 REOWN_PROJECT_ID=your-walletconnect-project-id
+
+# Network Configuration
+# Set to true for production (Celo mainnet), false for development (Alfajores testnet)
+NEXT_PUBLIC_IS_PROD=false
 ```
 
-See `.env.example` for complete configuration details.
+### Environment Variables Explained
+
+- **`JWT_SECRET`**: Cryptographic key for JWT token signing (minimum 32 characters)
+- **`ALLOWED_ORIGINS`**: Comma-separated list of allowed CORS origins
+- **`MONGO_DB_URI_PRODUCTION`**: MongoDB connection string for production database
+- **`MONGO_DB_URI_DEVELOPMENT`**: MongoDB connection string for development database
+- **`REOWN_PROJECT_ID`**: WalletConnect project ID for wallet connectivity
+- **`NEXT_PUBLIC_IS_PROD`**:
+  - `true` = Production mode (Celo mainnet + production database)
+  - `false` = Development mode (Alfajores testnet + development database)
+
+### Network Modes
+
+**Development Mode (`NEXT_PUBLIC_IS_PROD=false`)**:
+
+- Uses Celo Alfajores testnet
+- Connects to development MongoDB database
+- Uses testnet contract addresses
+- Ideal for local development and testing
+
+**Production Mode (`NEXT_PUBLIC_IS_PROD=true`)**:
+
+- Uses Celo mainnet
+- Connects to production MongoDB database
+- Uses mainnet contract addresses
+- For live deployment
+
+See `.env.example` for complete configuration template.
 
 ## 📚 Documentation
 
@@ -156,9 +188,30 @@ pnpm start
 ### Environment Setup
 
 1. Copy `.env.example` to `.env.local`
-2. Configure all required environment variables
-3. Ensure MongoDB is accessible
-4. Set up proper CORS origins for production
+2. Configure all required environment variables:
+   - **For Development**: Set `NEXT_PUBLIC_IS_PROD=false`
+   - **For Production**: Set `NEXT_PUBLIC_IS_PROD=true`
+3. Configure MongoDB URIs for both environments
+4. Ensure MongoDB databases are accessible
+5. Set up proper CORS origins for your deployment
+
+### Database Setup
+
+The application automatically selects the appropriate database based on the `NEXT_PUBLIC_IS_PROD` setting:
+
+- **Development**: Uses `MONGO_DB_URI_DEVELOPMENT`
+- **Production**: Uses `MONGO_DB_URI_PRODUCTION`
+
+This allows you to safely test with development data while keeping production data separate.
+
+### Smart Contract Configuration
+
+Contract addresses are automatically selected based on the environment:
+
+- **Development**: Uses Alfajores testnet contracts from `lib/abi/alfajores/`
+- **Production**: Uses Celo mainnet contracts from `lib/abi/celo/`
+
+**Note**: Ensure mainnet contract addresses are updated in `lib/abi/celo/NexusExplorerBadge.ts` before production deployment.
 
 See [Deployment Guide](./DEPLOYMENT_GUIDE.md) for detailed instructions.
 
@@ -194,8 +247,43 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 For questions or support:
 
 - Check the documentation in this repository
-- Review the troubleshooting guides
+- Review the troubleshooting guides below
 - Open an issue for bugs or feature requests
+
+### 🔧 Troubleshooting
+
+**Environment Configuration Issues:**
+
+1. **MongoDB Connection Errors**:
+
+   - Verify the correct MongoDB URI is configured for your environment
+   - Check if `NEXT_PUBLIC_IS_PROD` is set correctly
+   - Ensure MongoDB service is running and accessible
+
+2. **Wrong Network/Chain Issues**:
+
+   - Verify `NEXT_PUBLIC_IS_PROD` setting matches your intended environment
+   - Development: `NEXT_PUBLIC_IS_PROD=false` (Alfajores testnet)
+   - Production: `NEXT_PUBLIC_IS_PROD=true` (Celo mainnet)
+
+3. **Contract Address Issues**:
+
+   - For production, ensure mainnet contract addresses are updated in `lib/abi/celo/`
+   - Development automatically uses testnet addresses from `lib/abi/alfajores/`
+
+4. **Authentication Issues**:
+   - Ensure `JWT_SECRET` is at least 32 characters long
+   - Verify `ALLOWED_ORIGINS` includes your domain
+   - Check that both MongoDB URIs are configured
+
+**Quick Environment Check:**
+
+```bash
+# Verify your environment configuration
+echo "Is Production: $NEXT_PUBLIC_IS_PROD"
+echo "Development DB: $MONGO_DB_URI_DEVELOPMENT"
+echo "Production DB: $MONGO_DB_URI_PRODUCTION"
+```
 
 ---
 

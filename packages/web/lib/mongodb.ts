@@ -1,10 +1,16 @@
 import mongoose from "mongoose"
 
-if (!process.env.MONGO_DB_URI) {
-  throw new Error("Please add your MONGO_DB_URI to .env.local")
+// Determine which MongoDB URI to use based on environment
+const isProduction = process.env.NEXT_PUBLIC_IS_PROD === "true"
+const MONGO_DB_URI_KEY = isProduction
+  ? "MONGO_DB_URI_PRODUCTION"
+  : "MONGO_DB_URI_DEVELOPMENT"
+
+if (!process.env[MONGO_DB_URI_KEY]) {
+  throw new Error(`Please add your ${MONGO_DB_URI_KEY} to .env.local`)
 }
 
-const MONGODB_URI: string = process.env.MONGO_DB_URI
+const MONGODB_URI: string = process.env[MONGO_DB_URI_KEY]!
 
 interface MongooseConnection {
   conn: typeof mongoose | null

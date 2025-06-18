@@ -1,111 +1,107 @@
-'use client';
+"use client"
 
-import Image from 'next/image';
-import Link from 'next/link';
-import { useEffect, useState, useCallback, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
-import { createPublicClient, createWalletClient, custom, http } from 'viem';
-import { celoAlfajores } from 'viem/chains';
-import {
-  nexusExplorerAbi,
-  nexusExplorerAddress,
-} from '@/lib/abi/NexusExplorerBadge';
-import emailjs from '@emailjs/browser';
-import { useAccount } from 'wagmi';
+import Image from "next/image"
+import Link from "next/link"
+import { useEffect, useState, useCallback, useMemo } from "react"
+import { useRouter } from "next/navigation"
+import { createPublicClient, createWalletClient, custom, http } from "viem"
+import { celoAlfajores } from "viem/chains"
+import { currentChain } from "@/providers/WagmiWrapper"
+import { nexusExplorerAbi, nexusExplorerAddress } from "@/lib/abi/contracts"
+import emailjs from "@emailjs/browser"
+import { useAccount } from "wagmi"
 
 export default function ReferralPageAndrea() {
-  const { address, isConnected } = useAccount();
-  const router = useRouter();
+  const { address, isConnected } = useAccount()
+  const router = useRouter()
 
-  const [minting, setMinting] = useState(false);
-  const [txHash, setTxHash] = useState<string | null>(null);
-  const [hasNFT, setHasNFT] = useState<boolean>(false);
-  const [mintError, setMintError] = useState<string | null>(null);
-  const [emailSent, setEmailSent] = useState(false);
-  const [sendingEmail, setSendingEmail] = useState(false);
+  const [minting, setMinting] = useState(false)
+  const [txHash, setTxHash] = useState<string | null>(null)
+  const [hasNFT, setHasNFT] = useState<boolean>(false)
+  const [mintError, setMintError] = useState<string | null>(null)
+  const [emailSent, setEmailSent] = useState(false)
+  const [sendingEmail, setSendingEmail] = useState(false)
   const [formData, setFormData] = useState({
-    name: '',
-    username: '',
-    email: '',
-  });
-
+    name: "",
+    username: "",
+    email: "",
+  })
   const publicClient = useMemo(() => {
     return createPublicClient({
-      chain: celoAlfajores,
+      chain: currentChain,
       transport: http(),
-    });
-  }, []);
+    })
+  }, [])
 
   const formatAddress = (addr: string) => {
-    return addr.toLowerCase().startsWith('0x')
+    return addr.toLowerCase().startsWith("0x")
       ? (addr as `0x${string}`)
-      : (`0x${addr}` as `0x${string}`);
-  };
+      : (`0x${addr}` as `0x${string}`)
+  }
 
   useEffect(() => {
     const checkOwnership = async () => {
-      if (!address) return;
+      if (!address) return
       try {
         const tokenIds = (await publicClient.readContract({
           address: nexusExplorerAddress,
           abi: nexusExplorerAbi,
-          functionName: 'getNFTsByAddress',
+          functionName: "getNFTsByAddress",
           args: [formatAddress(address)],
-        })) as bigint[];
+        })) as bigint[]
 
-        setHasNFT(tokenIds.length > 0);
+        setHasNFT(tokenIds.length > 0)
       } catch (err) {
-        console.error('❌ Error checking NFT ownership:', err);
+        console.error("❌ Error checking NFT ownership:", err)
       }
-    };
+    }
 
-    checkOwnership();
-  }, [address, publicClient]);
+    checkOwnership()
+  }, [address, publicClient])
 
   const handleMint = useCallback(async () => {
-    setMintError(null);
+    setMintError(null)
 
     if (!address) {
-      setMintError('Wallet not connected.');
-      return;
+      setMintError("Wallet not connected.")
+      return
     }
 
     try {
-      const provider =
-        (window?.ethereum?.providers?.find((p: any) => p.isMetaMask) ??
-          window?.ethereum) as any;
+      const provider = (window?.ethereum?.providers?.find(
+        (p: any) => p.isMetaMask
+      ) ?? window?.ethereum) as any
 
       if (!provider) {
-        setMintError('MetaMask provider not found.');
-        return;
+        setMintError("MetaMask provider not found.")
+        return
       }
-
       const walletClient = createWalletClient({
-        chain: celoAlfajores,
+        chain: currentChain,
         transport: custom(provider),
-      });
+      })
 
-      setMinting(true);
+      setMinting(true)
       const hash = await walletClient.writeContract({
         address: nexusExplorerAddress,
         abi: nexusExplorerAbi,
-        functionName: 'mintExplorerBadge',
+        functionName: "mintExplorerBadge",
         account: formatAddress(address),
-      });
+      })
 
-      setTxHash(hash);
-      router.push('/success');
+      setTxHash(hash)
+      router.push("/success")
     } catch (err) {
-      console.error('❌ Minting failed:', err);
-      setMintError('Minting failed. Please check your wallet and try again.');
+      console.error("❌ Minting failed:", err)
+      setMintError("Minting failed. Please check your wallet and try again.")
     } finally {
-      setMinting(false);
+      setMinting(false)
     }
-  }, [address, router]);
+  }, [address, router])
 
   const handleSendEmail = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSendingEmail(true);
+    e.preventDefault()
+    setSendingEmail(true)
 
     try {
       await emailjs.send(
@@ -113,15 +109,15 @@ export default function ReferralPageAndrea() {
         process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!,
         formData,
         process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!
-      );
-      setEmailSent(true);
+      )
+      setEmailSent(true)
     } catch (err: any) {
-      console.error('❌ Email failed:', err?.text || err?.message || err);
-      setEmailSent(false);
+      console.error("❌ Email failed:", err?.text || err?.message || err)
+      setEmailSent(false)
     } finally {
-      setSendingEmail(false);
+      setSendingEmail(false)
     }
-  };
+  }
 
   return (
     <div className="flex flex-col justify-center items-center px-4 py-8 max-w-4xl mx-auto">
@@ -146,9 +142,7 @@ export default function ReferralPageAndrea() {
             type="text"
             placeholder="Name"
             value={formData.name}
-            onChange={(e) =>
-              setFormData({ ...formData, name: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             className="border rounded px-4 py-2"
             required
           />
@@ -177,7 +171,7 @@ export default function ReferralPageAndrea() {
             className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
             disabled={sendingEmail}
           >
-            {sendingEmail ? 'Sending...' : 'Send'}
+            {sendingEmail ? "Sending..." : "Send"}
           </button>
         </form>
       ) : (
@@ -196,12 +190,12 @@ export default function ReferralPageAndrea() {
               disabled={minting}
               className="rounded bg-green-600 text-white font-semibold px-6 py-2 hover:bg-green-700 disabled:opacity-50"
             >
-              {minting ? 'Minting...' : 'Mint Explorer Badge'}
+              {minting ? "Minting..." : "Mint Explorer Badge"}
             </button>
           )}
           {txHash && (
             <p className="text-sm text-green-600 mt-4 break-all">
-              ✅ Transaction sent:{' '}
+              ✅ Transaction sent:{" "}
               <a
                 href={`https://alfajores.celoscan.io/tx/${txHash}`}
                 target="_blank"
@@ -224,5 +218,5 @@ export default function ReferralPageAndrea() {
         </div>
       )}
     </div>
-  );
+  )
 }

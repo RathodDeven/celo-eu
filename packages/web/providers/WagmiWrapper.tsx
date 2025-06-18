@@ -3,8 +3,13 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { connectorsForWallets } from "@rainbow-me/rainbowkit"
 import { WagmiProvider, createConfig, http } from "wagmi"
-import { celoAlfajores } from "wagmi/chains"
+import { celoAlfajores, celo } from "wagmi/chains"
 import { injectedWallet } from "@rainbow-me/rainbowkit/wallets"
+
+// Determine which chain to use based on environment
+const isProduction = process.env.NEXT_PUBLIC_IS_PROD === "true"
+export const currentChain = isProduction ? celo : celoAlfajores
+export const isProductionEnvironment = isProduction
 
 const connectors = connectorsForWallets(
   [
@@ -22,9 +27,10 @@ const connectors = connectorsForWallets(
 
 const config = createConfig({
   connectors,
-  chains: [celoAlfajores],
+  chains: [currentChain],
   transports: {
     [celoAlfajores.id]: http(),
+    [celo.id]: http(),
   },
 })
 

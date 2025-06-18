@@ -33,10 +33,7 @@ import {
   Briefcase, // Icon for Contributor Program
   AtSign, // Added for username icon
 } from "lucide-react"
-import {
-  nexusExplorerAddress,
-  nexusExplorerAbi,
-} from "@/lib/abi/NexusExplorerBadge"
+import { nexusExplorerAddress, nexusExplorerAbi } from "@/lib/abi/contracts"
 
 interface UserProfile {
   name?: string

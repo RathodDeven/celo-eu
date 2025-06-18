@@ -3,10 +3,7 @@
 import Image from "next/image"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import {
-  nexusExplorerAbi,
-  nexusExplorerAddress,
-} from "@/lib/abi/NexusExplorerBadge"
+import { nexusExplorerAbi, nexusExplorerAddress } from "@/lib/abi/contracts"
 import { motion } from "framer-motion"
 import {
   Award,
@@ -23,6 +20,7 @@ import {
 import { useAccount, useReadContract } from "wagmi"
 import { useConnectModal } from "@rainbow-me/rainbowkit"
 import { celoAlfajores } from "viem/chains"
+import { currentChain } from "@/providers/WagmiWrapper"
 import { useAuth } from "@/providers/AuthProvider"
 
 export default function Home() {
@@ -46,7 +44,7 @@ export default function Home() {
     abi: nexusExplorerAbi,
     functionName: "hasMinted",
     args: address ? [address] : undefined,
-    chainId: celoAlfajores.id,
+    chainId: currentChain.id,
     query: {
       enabled: !!address && isConnected && isSignedIn,
     },

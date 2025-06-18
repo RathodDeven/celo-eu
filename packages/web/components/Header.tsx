@@ -11,10 +11,7 @@ import { useAccount, useReadContract } from "wagmi"
 import { useAuth } from "@/providers/AuthProvider"
 import { useConnectModal } from "@rainbow-me/rainbowkit"
 import { Wallet } from "lucide-react"
-import {
-  nexusExplorerAbi,
-  nexusExplorerAddress,
-} from "@/lib/abi/NexusExplorerBadge"
+import { nexusExplorerAbi, nexusExplorerAddress } from "@/lib/abi/contracts"
 
 // Reuse footer navigation for drawer
 const socialNavigation = [
