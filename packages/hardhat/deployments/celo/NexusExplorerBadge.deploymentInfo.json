@@ -1,0 +1,17 @@
+{
+  "contractName": "NexusExplorerBadge",
+  "network": "celo",
+  "chainId": 42220,
+  "proxyAddress": "0x36FdB2cA630eb606ED7BE343a9ebF8AEcc5A24EC",
+  "implementationAddress": "0xdcE1961bD6c419D241D88F3A19576dA464247487",
+  "adminAddress": "0x0000000000000000000000000000000000000000",
+  "deployer": "0xB522133dBd9C8B424429D89d821aeb2a115dB678",
+  "deployedAt": 1750256514874,
+  "blockNumber": 38355750,
+  "transactionHash": "0x65cfe063bec4092a3ee3c26734e2ec52c3d70ee1000802b2369b36f660621de3",
+  "constructorArgs": [
+    "0xB522133dBd9C8B424429D89d821aeb2a115dB678"
+  ],
+  "verified": true,
+  "version": "1.0.0"
+}

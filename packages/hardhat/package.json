@@ -43,6 +43,8 @@
     "prettier": "prettier --write 'contracts/**/*.sol' '**/*.ts'",
     "deploy:nexus": "hardhat run scripts/deploy-nexus-badge.ts",
     "upgrade:nexus": "hardhat run scripts/upgrade-nexus-badge.ts",
+    "verify:proxy": "hardhat run scripts/verify-proxy.ts",
+    "verify:nexus": "cross-env CONTRACT_NAME=NexusExplorerBadge hardhat run scripts/verify-proxy.ts",
     "deployments": "hardhat deployments",
     "deployment-info": "hardhat deployment-info"
   }

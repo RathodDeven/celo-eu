@@ -852,4 +852,4 @@ export const nexusExplorerAbi = [
   },
 ]
 // Alfajores testnet (development) address
-export const nexusExplorerAddress = "0xd987523F26B25beb4bE459Ee39Ce111948FEE968"
+export const nexusExplorerAddress = "0x8EbEe5573E39F180F0bC2C7853a720D564AC7708"

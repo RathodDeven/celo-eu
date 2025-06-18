@@ -218,38 +218,57 @@ export async function verifyUUPSProxy(
     implementationAddress,
     contractPath,
     constructorArgs
-  )
-
-  // 2. Verify the proxy contract (it should auto-detect as a proxy)
+  )  // 2. Verify the proxy contract
   console.log("🔍 Step 2: Verifying proxy contract...")
+  
+  // Try automatic verification first
   try {
-    await hre.run("verify:verify", {
-      address: proxyAddress,
-    })
-    console.log("✅ Proxy contract verified successfully")
-    proxyVerified = true
+    console.log("� Attempting automatic proxy verification...")
+    
+    // Method 1: Try basic verification first
+    try {
+      await hre.run("verify:verify", {
+        address: proxyAddress,
+      })
+      console.log("✅ Proxy verified with basic verification")
+      proxyVerified = true
+    } catch (basicError: any) {
+      if (basicError.message.includes("Already Verified")) {
+        console.log("✅ Proxy contract is already verified!")
+        proxyVerified = true
+      } else {
+        console.log("ℹ️ Basic verification failed, trying as ERC1967Proxy...")
+        
+        // Method 2: Try as ERC1967Proxy with constructor args
+        await hre.run("verify:verify", {
+          address: proxyAddress,
+          constructorArguments: [implementationAddress, "0x"],
+          contract: "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol:ERC1967Proxy"
+        })
+        console.log("✅ Proxy verified as ERC1967Proxy")
+        proxyVerified = true
+      }
+    }
   } catch (error: any) {
     if (error.message.includes("Already Verified")) {
       console.log("✅ Proxy contract is already verified!")
       proxyVerified = true
-    } else if (
-      error.message.includes("Contract source code already verified")
-    ) {
-      console.log("✅ Proxy contract is already verified!")
-      proxyVerified = true
-    } else if (
-      error.message.includes("The contract 0x") &&
-      error.message.includes("has already been verified")
-    ) {
-      console.log("✅ Proxy contract is already verified!")
-      proxyVerified = true
     } else {
-      console.log(
-        "⚠️ Proxy verification failed (this is sometimes expected for proxies):",
-        error.message
-      )
-      // For proxies, this might be normal - they use standard OpenZeppelin bytecode
-      proxyVerified = true // Consider it successful if implementation is verified
+      console.log("⚠️ Automatic proxy verification failed:", error.message)
+      console.log("")
+      console.log("🔧 Manual Verification Required:")
+      console.log(`📍 Proxy Address: ${proxyAddress}`)
+      console.log(`📋 Implementation: ${implementationAddress}`)
+      console.log("")
+      console.log("Manual verification steps:")
+      console.log(`1. Go to: https://${hre.network.name === 'celo' ? 'celoscan.io' : 'alfajores.celoscan.io'}/address/${proxyAddress}`)
+      console.log(`2. Click "More Options" → "Is this a proxy?"`)
+      console.log(`3. Select "EIP-1967" as proxy type`)
+      console.log(`4. Enter implementation address: ${implementationAddress}`)
+      console.log(`5. Click "Verify"`)
+      console.log("")
+      console.log("💡 After manual verification, you'll see 'Read as Proxy' and 'Write as Proxy' tabs")
+      proxyVerified = false
     }
   }
 
@@ -621,19 +640,18 @@ export async function upgradeUUPSProxy(
     deployedAt: Date.now(), // Update timestamp for new implementation
   }
 
-  await updateDeploymentInfo(network.name, contractName, newImplUpdateInfo)
-  // Verify new implementation
+  await updateDeploymentInfo(network.name, contractName, newImplUpdateInfo)  // Verify new implementation
   if (verify) {
-    console.log("🔍 Verifying new implementation...")
+    console.log("🔍 Verifying new implementation contract...")
 
-    const implementationVerified = await verifyContract(
+    const verified = await verifyContract(
       hre,
       newImplementationAddress,
       contractPath,
       []
     )
 
-    if (implementationVerified) {
+    if (verified) {
       await updateDeploymentInfo(network.name, contractName, {
         verified: true,
       })
@@ -645,5 +663,71 @@ export async function upgradeUUPSProxy(
     proxyAddress,
     newImplementationAddress,
     previousImplementationAddress,
+  }
+}
+
+/**
+ * Validate network configuration and exit with helpful message if mismatch
+ *
+ * NOTE: This function is rarely needed in practice since Hardhat handles
+ * network selection automatically via the --network flag. Only use this
+ * if you need to enforce a specific network for a particular script.
+ *
+ * @param hre Hardhat Runtime Environment
+ * @param expectedNetwork Optional expected network name to validate against
+ */
+export function validateNetwork(
+  hre: HardhatRuntimeEnvironment,
+  expectedNetwork?: string
+): void {
+  const currentNetwork = hre.network.name
+
+  // If no expected network specified, just log current network
+  if (!expectedNetwork) {
+    console.log(`📍 Current Network: ${currentNetwork}`)
+    return
+  }
+
+  // If networks match, we're good
+  if (currentNetwork === expectedNetwork) {
+    return
+  }
+
+  // Networks don't match - show error and exit
+  console.error(
+    `❌ Error: Current network is ${currentNetwork}, but ${expectedNetwork} was requested.`
+  )
+  console.log(`💡 Please run with: --network ${expectedNetwork}`)
+  console.log(
+    `💡 Or remove the network parameter to use current network (${currentNetwork})`
+  )
+  process.exit(1)
+}
+
+/**
+ * Parse command line arguments for common deployment options
+ * Note: Network is handled by Hardhat itself via --network flag
+ */
+export interface DeploymentArgs {
+  owner?: string
+  verify: boolean
+  contractName?: string
+  constructorArgs?: string[]
+}
+
+export function parseDeploymentArgs(): DeploymentArgs {
+  const args = process.argv.slice(2)
+
+  const ownerFlag = args.indexOf("--owner")
+  const contractFlag = args.indexOf("--contract")
+  const argsFlag = args.indexOf("--args")
+  const noVerifyFlag = args.indexOf("--no-verify")
+
+  return {
+    owner:
+      ownerFlag !== -1 ? args[ownerFlag + 1] : process.env.DEPLOYER_ADDRESS,
+    verify: noVerifyFlag === -1,
+    contractName: contractFlag !== -1 ? args[contractFlag + 1] : undefined,
+    constructorArgs: argsFlag !== -1 ? args[argsFlag + 1].split(",") : [],
   }
 }
