@@ -103,7 +103,7 @@ export default function Header() {
     <nav className="bg-background text-foreground border-b border-border">
       <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
         <div className="relative flex h-16 justify-between">
-          {" "}
+          {/* Mobile layout */}
           <div className="flex items-center sm:hidden">
             {/* Mobile menu button and logo side by side */}
             <button
@@ -123,7 +123,7 @@ export default function Header() {
                 alt="Celo Europe Logo"
               />
             </div>
-          </div>{" "}
+          </div>
           {/* Mobile right side controls */}
           <div className="flex items-center gap-2 sm:hidden">
             {/* Mobile Theme toggle */}
@@ -168,6 +168,7 @@ export default function Header() {
               />
             )}
           </div>
+          {/* Desktop layout */}
           <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-start">
             <div className="flex flex-shrink-0 items-center">
               <Image
@@ -262,8 +263,8 @@ export default function Header() {
                 </NavLink>
               )}
             </div>
-          </div>{" "}
-          <div className="flex items-center pr-2 sm:static sm:ml-6 sm:pr-0">
+          </div>
+          <div className="hidden sm:flex items-center  sm:static sm:ml-6">
             {/* Theme toggle button - only on desktop */}
             <div className="mr-3 hidden sm:block">
               <ModeToggle />
