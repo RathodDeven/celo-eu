@@ -37,10 +37,7 @@ import {
   PartyPopper,
 } from "lucide-react"
 
-import {
-  nexusExplorerAddress,
-  nexusExplorerAbi,
-} from "@/lib/abi/NexusExplorerBadge"
+import { nexusExplorerAddress, nexusExplorerAbi } from "@/lib/abi/contracts"
 import { useAuth } from "@/providers/AuthProvider"
 import { getDivviDataSuffix, submitDivviReferral } from "@/lib/divvi-utils"
 

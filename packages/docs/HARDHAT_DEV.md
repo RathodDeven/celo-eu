@@ -1,6 +1,6 @@
 # Hardhat Development Guide
 
-This guide provides instructions for developing, deploying, and interacting with the Nexus Explorer Badge smart contract using Hardhat and Ignition.
+This guide provides instructions for developing, deploying, and interacting with upgradeable smart contracts using Hardhat and OpenZeppelin's UUPS proxy pattern.
 
 ## Prerequisites
 
@@ -60,29 +60,106 @@ pnpm clean
 pnpm build
 ```
 
-## Deployment with Ignition
+## Upgradeable Contract System
 
-Deploy the smart contract to a network (alfajores or celo):
+All contracts are now deployed using OpenZeppelin's UUPS (Universal Upgradeable Proxy Standard) pattern, which provides:
 
-```bash
-# From packages/hardhat directory
-pnpm hardhat ignition deploy ./ignition/modules/NexusExplorerBadge.ts --network alfajores --parameters '{"initialOwner": "0xYourDesiredOwnerAddress"}'
+- **Upgradeability**: Contracts can be upgraded while preserving state and address
+- **Security**: Only authorized accounts can perform upgrades
+- **Gas Efficiency**: Proxy overhead is minimal
+- **Compatibility**: Works seamlessly with existing tooling
+
+### Deployment Structure
+
+Deployments are organized in the following structure:
+
+```
+packages/hardhat/deployments/
+├── alfajores/
+│   ├── NexusExplorerBadge.deploymentInfo.json
+│   └── NexusExplorerBadge.abi.json
+└── celo/
+    ├── NexusExplorerBadge.deploymentInfo.json
+    └── NexusExplorerBadge.abi.json
 ```
 
-If you don't specify the initialOwner parameter, the deployment will use the address derived from your `PRIVATE_KEY` as both the deployer and contract owner.
+Each deployment includes:
 
-## Contract Verification
+- **deploymentInfo.json**: Complete deployment metadata including proxy address, implementation address, deployer, version, etc.
+- **abi.json**: Contract ABI for frontend integration
 
-After deployment, verify your contract on Celoscan:
+## Deployment Commands
+
+### Deploy New Contract
+
+Deploy the Nexus Explorer Badge contract:
 
 ```bash
-# From packages/hardhat directory
-pnpm hardhat verify-contract --network alfajores
+# Deploy to Alfajores testnet
+pnpm deploy:nexus --network alfajores
+
+# Deploy to Celo mainnet
+pnpm deploy:nexus --network celo
+
+# Deploy with custom owner
+pnpm deploy:nexus --network alfajores --owner 0xYourOwnerAddress
+
+# Deploy without verification
+pnpm deploy:nexus --network alfajores --no-verify
 ```
 
-Parameters:
+### Upgrade Existing Contract
 
-- `--network`: The target network (`alfajores` for testnet, `celo` for mainnet)
+Upgrade an already deployed contract:
+
+```bash
+# Upgrade on Alfajores testnet
+pnpm upgrade:nexus --network alfajores
+
+# Upgrade on Celo mainnet
+pnpm upgrade:nexus --network celo
+
+# Upgrade without verification
+pnpm upgrade:nexus --network alfajores --no-verify
+```
+
+### Alternative Deployment Methods
+
+You can also use hardhat run directly:
+
+```bash
+# Deploy
+npx hardhat run scripts/deploy-nexus-badge.ts --network alfajores
+
+# Upgrade
+npx hardhat run scripts/upgrade-nexus-badge.ts --network alfajores
+```
+
+## Deployment Management
+
+### List All Deployments
+
+View all deployed contracts on the current network:
+
+```bash
+# List deployments on current network
+pnpm deployments --network alfajores
+
+# Or using hardhat directly
+npx hardhat deployments --network alfajores
+```
+
+### Get Deployment Details
+
+Get detailed information about a specific contract:
+
+```bash
+# Get deployment info
+pnpm deployment-info --contract NexusExplorerBadge --network alfajores
+
+# Or using hardhat directly
+npx hardhat deployment-info --contract NexusExplorerBadge --network alfajores
+```
 
 ## Minting Badges
 
@@ -90,13 +167,104 @@ Mint a Nexus Explorer Badge to your account or another address:
 
 ```bash
 # Self-mint (using the account from PRIVATE_KEY)
-pnpm hardhat mint --network alfajores
+npx hardhat mint --network alfajores
 
 # Mint to a specific address (requires owner privileges)
-pnpm hardhat mint --recipient 0xYourRecipientAddressHere --network alfajores
+npx hardhat mint --recipient 0xYourRecipientAddressHere --network alfajores
 ```
 
-Parameters:
+The mint task automatically uses the deployed contract address from the deployment info.
 
-- `--network`: The target network (`alfajores` for testnet, `celo` for mainnet)
-- `--recipient`: (Optional) The address that will receive the minted NFT
+## Contract Verification
+
+Contracts are automatically verified during deployment. If verification fails or you need to verify manually:
+
+- Implementation contracts are verified automatically
+- Proxy contracts don't need separate verification as they use standard OpenZeppelin proxy bytecode
+
+## Developing New Upgradeable Contracts
+
+When creating new upgradeable contracts:
+
+1. **Use the Template**: Copy `scripts/templates/upgradeableContractTemplate.ts` and modify for your contract
+2. **Follow Upgradeable Patterns**:
+
+   - Inherit from OpenZeppelin's upgradeable contracts
+   - Use `initialize()` instead of `constructor()`
+   - Add `_authorizeUpgrade()` function for UUPS
+   - Add `_disableInitializers()` in constructor
+
+3. **Example Contract Structure**:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+
+contract YourContract is
+    Initializable,
+    ERC721Upgradeable,
+    OwnableUpgradeable,
+    UUPSUpgradeable
+{
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(address initialOwner) public initializer {
+        __ERC721_init("Your Contract", "YC");
+        __Ownable_init(initialOwner);
+        __UUPSUpgradeable_init();
+    }
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+}
+```
+
+## Deployment Info Structure
+
+Each deployment creates a comprehensive info file:
+
+```json
+{
+  "contractName": "NexusExplorerBadge",
+  "network": "alfajores",
+  "chainId": 44787,
+  "proxyAddress": "0x...",
+  "implementationAddress": "0x...",
+  "adminAddress": "0x...",
+  "deployer": "0x...",
+  "deployedAt": 1671234567890,
+  "blockNumber": 12345678,
+  "transactionHash": "0x...",
+  "constructorArgs": ["0x..."],
+  "verified": true,
+  "version": "1.0.0"
+}
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **"No deployment found"**: Ensure the contract was deployed to the correct network
+2. **"Upgrade failed"**: Check that you're the contract owner and the new implementation is compatible
+3. **"Verification failed"**: Check that CELOSCAN_API_KEY is set correctly
+
+### Getting Help
+
+- Check deployment info: `pnpm deployments --network <network>`
+- View contract details: `pnpm deployment-info --contract <name> --network <network>`
+- Verify network connection: Ensure you're using the correct network flag
+
+## Security Considerations
+
+- **Owner Key Security**: Keep your private key secure as it controls contract upgrades
+- **Upgrade Testing**: Always test upgrades on testnets first
+- **State Compatibility**: Ensure new contract versions are storage-compatible with previous versions
+- **Access Controls**: Verify that only authorized accounts can trigger upgrades

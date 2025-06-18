@@ -12,6 +12,8 @@
     "@nomicfoundation/hardhat-verify": "^2.0.11",
     "@nomicfoundation/ignition-core": "^0.15.5",
     "@openzeppelin/contracts": "^5.1.0",
+    "@openzeppelin/contracts-upgradeable": "^5.1.0",
+    "@openzeppelin/hardhat-upgrades": "^3.1.0",
     "@typechain/ethers-v6": "^0.5.0",
     "@typechain/hardhat": "^9.1.0",
     "@types/chai": "^4.3.16",
@@ -31,13 +33,19 @@
     "dotenv": "^16.4.5"
   },
   "scripts": {
-    "compile": "hardhat compile",
+    "compile": "pnpm run clean && hardhat compile",
     "tsc": "tsc -p .",
     "build": "pnpm run compile && pnpm run tsc",
     "generate-types": "hardhat typechain",
     "clean": "hardhat clean && rimraf dist",
     "run:node": "hardhat node",
     "test": "hardhat test",
-    "prettier": "prettier --write 'contracts/**/*.sol' '**/*.ts'"
+    "prettier": "prettier --write 'contracts/**/*.sol' '**/*.ts'",
+    "deploy:nexus": "hardhat run scripts/deploy-nexus-badge.ts",
+    "upgrade:nexus": "hardhat run scripts/upgrade-nexus-badge.ts",
+    "verify:proxy": "hardhat run scripts/verify-proxy.ts",
+    "verify:nexus": "cross-env CONTRACT_NAME=NexusExplorerBadge hardhat run scripts/verify-proxy.ts",
+    "deployments": "hardhat deployments",
+    "deployment-info": "hardhat deployment-info"
   }
 }

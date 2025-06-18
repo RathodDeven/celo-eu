@@ -1,18 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Pausable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721URIStorageUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721PausableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721BurnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 contract NexusExplorerBadge is
-    ERC721,
-    ERC721URIStorage,
-    ERC721Pausable,
-    Ownable,
-    ERC721Burnable
+    Initializable,
+    ERC721Upgradeable,
+    ERC721URIStorageUpgradeable,
+    ERC721PausableUpgradeable,
+    OwnableUpgradeable,
+    ERC721BurnableUpgradeable,
+    UUPSUpgradeable
 {
     uint256 private _nextTokenId;
     string private _baseBadgeURI;
@@ -23,9 +27,21 @@ contract NexusExplorerBadge is
         uint256 indexed tokenId
     );
 
-    constructor(
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(
         address initialOwner
-    ) ERC721("Nexus Explorer Badge", "NXEXP") Ownable(initialOwner) {
+    ) public initializer {
+        __ERC721_init("Nexus Explorer Badge", "NXEXP");
+        __ERC721URIStorage_init();
+        __ERC721Pausable_init();
+        __Ownable_init(initialOwner);
+        __ERC721Burnable_init();
+        __UUPSUpgradeable_init();
+        
         _baseBadgeURI = "ipfs://bafkreid2wtv65ife2zk2wic4exfn5whxk4gcy4ly4ybfvxuywjtvmips2e";
     }
 
@@ -84,15 +100,15 @@ contract NexusExplorerBadge is
     /// Optional: allow the owner to update the base URI
     function updateBaseBadgeURI(string memory newUri) external onlyOwner {
         _baseBadgeURI = newUri;
-    }
+    }    // ───── Required Overrides ─────
 
-    // ───── Required Overrides ─────
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     function _update(
         address to,
         uint256 tokenId,
         address auth
-    ) internal override(ERC721, ERC721Pausable) returns (address) {
+    ) internal override(ERC721Upgradeable, ERC721PausableUpgradeable) returns (address) {
         address from = _ownerOf(tokenId);
         
         // Call parent _update first
@@ -110,13 +126,13 @@ contract NexusExplorerBadge is
 
     function tokenURI(
         uint256 tokenId
-    ) public view override(ERC721, ERC721URIStorage) returns (string memory) {
+    ) public view override(ERC721Upgradeable, ERC721URIStorageUpgradeable) returns (string memory) {
         return super.tokenURI(tokenId);
     }
 
     function supportsInterface(
         bytes4 interfaceId
-    ) public view override(ERC721, ERC721URIStorage) returns (bool) {
+    ) public view override(ERC721Upgradeable, ERC721URIStorageUpgradeable) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 }

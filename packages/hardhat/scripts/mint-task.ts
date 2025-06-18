@@ -1,6 +1,10 @@
 import { task, types } from "hardhat/config"
 import { NexusExplorerBadge } from "../typechain-types"
-import { getDeployedAddress, Network } from "./getDeployedAddress"
+import {
+  getContractInstance,
+  loadDeploymentInfo,
+  Network,
+} from "./utils/deploymentUtils"
 
 task("mint", "Mint a Nexus Explorer Badge")
   .addOptionalParam(
@@ -13,8 +17,19 @@ task("mint", "Mint a Nexus Explorer Badge")
     const network = hre.network.name as Network
     console.log(`🌐 Using network: ${network}`)
 
-    // Get contract address from ignition deployments using shared function
-    const contractAddress = await getDeployedAddress(network)
+    // Load deployment info
+    const deploymentInfo = loadDeploymentInfo(network, "NexusExplorerBadge")
+    if (!deploymentInfo) {
+      console.error(
+        `❌ No deployment found for NexusExplorerBadge on ${network}`
+      )
+      console.log(
+        `💡 Please deploy the contract first using: npm run deploy --network ${network}`
+      )
+      return
+    }
+
+    const contractAddress = deploymentInfo.proxyAddress
     console.log(`📝 Using contract address: ${contractAddress}`)
 
     // Get recipient address from task args or use the signer
@@ -23,11 +38,16 @@ task("mint", "Mint a Nexus Explorer Badge")
 
     console.log(`🎯 Minting to recipient: ${recipient}`)
 
-    // Get contract instance with explicit typing
-    const contract = (await hre.ethers.getContractAt(
-      "NexusExplorerBadge",
-      contractAddress
-    )) as unknown as NexusExplorerBadge
+    // Get contract instance
+    const contract = await getContractInstance(
+      hre,
+      network,
+      "NexusExplorerBadge"
+    )
+    if (!contract) {
+      console.error("❌ Failed to get contract instance")
+      return
+    }
 
     // Mint the NFT with explicit function calls
     let tx
@@ -44,6 +64,21 @@ task("mint", "Mint a Nexus Explorer Badge")
     const receipt = await tx.wait()
     if (receipt) {
       console.log("✅ Mint confirmed in block", receipt.blockNumber)
+
+      // Get token ID from events
+      const mintEvent = receipt.logs.find((log: any) => {
+        try {
+          const parsed = contract.interface.parseLog(log)
+          return parsed?.name === "ExplorerBadgeMinted"
+        } catch {
+          return false
+        }
+      })
+
+      if (mintEvent) {
+        const parsed = contract.interface.parseLog(mintEvent)
+        console.log(`🎉 NFT minted with Token ID: ${parsed?.args.tokenId}`)
+      }
     } else {
       console.log("⚠️ Transaction was submitted but receipt was null")
     }

@@ -26,12 +26,36 @@ Welcome to the official Celo Europe front-end application — a Next.js-based dA
 # Install dependencies
 pnpm install
 
-# Configure environment (see packages/web/.env.example)
+# Configure environment variables
 cp packages/web/.env.example packages/web/.env.local
+
+# Edit packages/web/.env.local with your configuration:
+# - Set NEXT_PUBLIC_IS_PROD=false for development (Alfajores testnet)
+# - Set NEXT_PUBLIC_IS_PROD=true for production (Celo mainnet)
+# - Configure separate MongoDB URIs for production and development
+# - Add your JWT secret, REOWN project ID, and allowed origins
 
 # Run the local dev server
 pnpm dev
 ```
+
+### 🔧 Environment Configuration
+
+The application uses environment-based configuration to support both development and production modes:
+
+**Development Mode** (`NEXT_PUBLIC_IS_PROD=false`):
+
+- Celo Alfajores testnet
+- Development MongoDB database
+- Testnet contract addresses
+
+**Production Mode** (`NEXT_PUBLIC_IS_PROD=true`):
+
+- Celo mainnet
+- Production MongoDB database
+- Mainnet contract addresses
+
+See `packages/web/.env.example` for the complete environment variable template.
 
 ## 📚 Documentation
 

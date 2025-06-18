@@ -1,56 +1,53 @@
-"use client";
+"use client"
 
-import { useWeb3 } from "@/contexts/useWeb3";
-import Image from "next/image";
-import Link from "next/link";
-import { useEffect, useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
-import { createPublicClient, http } from "viem";
-import { celo } from "viem/chains";
-import {
-  nexusExplorerAbi,
-  nexusExplorerAddress,
-} from "@/lib/abi/NexusExplorerBadge";
+import { useWeb3 } from "@/contexts/useWeb3"
+import Image from "next/image"
+import Link from "next/link"
+import { useEffect, useState, useMemo } from "react"
+import { useRouter } from "next/navigation"
+import { createPublicClient, http } from "viem"
+import { celo } from "viem/chains"
+import { currentChain } from "@/providers/WagmiWrapper"
+import { nexusExplorerAbi, nexusExplorerAddress } from "@/lib/abi/contracts"
 
 export default function SuccessPage() {
-  const { address, getUserAddress } = useWeb3();
-  const [badgeImage, setBadgeImage] = useState<string | null>(null);
-  const [checkingConnection, setCheckingConnection] = useState(true);
-  const router = useRouter();
-
+  const { address, getUserAddress } = useWeb3()
+  const [badgeImage, setBadgeImage] = useState<string | null>(null)
+  const [checkingConnection, setCheckingConnection] = useState(true)
+  const router = useRouter()
   const publicClient = useMemo(
     () =>
       createPublicClient({
-        chain: celo,
+        chain: currentChain,
         transport: http(),
       }),
     []
-  );
+  )
 
   useEffect(() => {
     const verifyConnection = async () => {
-      await getUserAddress();
-      setCheckingConnection(false);
-    };
-    verifyConnection();
-  }, [getUserAddress]);
+      await getUserAddress()
+      setCheckingConnection(false)
+    }
+    verifyConnection()
+  }, [getUserAddress])
 
   useEffect(() => {
     if (!checkingConnection && !address) {
-      router.push("/");
+      router.push("/")
     }
-  }, [address, checkingConnection, router]);
+  }, [address, checkingConnection, router])
 
   useEffect(() => {
     const loadNFT = async () => {
-      if (!address) return;
+      if (!address) return
       try {
         const tokenIds = (await publicClient.readContract({
           address: nexusExplorerAddress,
           abi: nexusExplorerAbi,
           functionName: "getNFTsByAddress",
           args: [address as `0x${string}`],
-        })) as bigint[];
+        })) as bigint[]
 
         if (tokenIds.length > 0) {
           const tokenURI = (await publicClient.readContract({
@@ -58,21 +55,21 @@ export default function SuccessPage() {
             abi: nexusExplorerAbi,
             functionName: "tokenURI",
             args: [tokenIds[0]],
-          })) as string;
+          })) as string
 
           const ipfsUrl = tokenURI.replace(
             "ipfs://",
             "https://crimson-peaceful-impala-136.mypinata.cloud/ipfs/"
-          );
-          setBadgeImage(ipfsUrl);
+          )
+          setBadgeImage(ipfsUrl)
         }
       } catch (err) {
-        console.error("Failed to fetch NFT metadata:", err);
+        console.error("Failed to fetch NFT metadata:", err)
       }
-    };
+    }
 
-    loadNFT();
-  }, [address, publicClient]);
+    loadNFT()
+  }, [address, publicClient])
 
   return (
     <div className="flex flex-col justify-center items-center px-4 py-12 max-w-4xl mx-auto">
@@ -111,5 +108,5 @@ export default function SuccessPage() {
         </Link>
       </div>
     </div>
-  );
+  )
 }
