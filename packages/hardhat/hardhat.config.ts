@@ -1,5 +1,6 @@
 import "@nomicfoundation/hardhat-toolbox"
 import "@nomicfoundation/hardhat-verify"
+import "@openzeppelin/hardhat-upgrades"
 import { config as dotEnvConfig } from "dotenv"
 dotEnvConfig()
 
@@ -12,9 +13,9 @@ if (process.env.PRIVATE_KEY) {
   process.env.DEPLOYER_ADDRESS = wallet.address
 }
 
-// Import your custom task definition
-import "./scripts/verify-contract"
+// Import your custom task definitions
 import "./scripts/mint-task"
+import "./scripts/deployment-info-task"
 
 const config: HardhatUserConfig = {
   networks: {

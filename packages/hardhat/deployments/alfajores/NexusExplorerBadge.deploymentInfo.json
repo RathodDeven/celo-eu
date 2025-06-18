@@ -1,0 +1,17 @@
+{
+  "contractName": "NexusExplorerBadge",
+  "network": "alfajores",
+  "chainId": 44787,
+  "proxyAddress": "0xd987523F26B25beb4bE459Ee39Ce111948FEE968",
+  "implementationAddress": "0x5e628d53326D77c17E6eC76e5Df5ADd8F42db68B",
+  "adminAddress": "0x0000000000000000000000000000000000000000",
+  "deployer": "0x524e01A9FC201673236469f8DBc305976354Ec00",
+  "deployedAt": 1750237226542,
+  "blockNumber": 49280461,
+  "transactionHash": "0x47caf0dbc65cbf49c94ddbb48235e58f3f523dd98ba4d2047e64f80862845e3d",
+  "constructorArgs": [
+    "0x524e01A9FC201673236469f8DBc305976354Ec00"
+  ],
+  "verified": true,
+  "version": "1.5000000000000004.0"
+}
