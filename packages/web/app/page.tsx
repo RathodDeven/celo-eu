@@ -339,7 +339,7 @@ export default function Home() {
                   <div className="flex items-start gap-3">
                     <MessageSquare className="text-brand-secondary h-5 w-5 mt-0.5 flex-shrink-0" />
                     <p className="text-sm text-muted-foreground">
-                      Access to our Charmverse space for coordination and
+                      Access to our workspace for coordination and
                       community discussions
                     </p>
                   </div>
@@ -387,21 +387,21 @@ export default function Home() {
                 </div>
 
                 <p className="text-muted-foreground mb-8">
-                  Awarded during IRL events and quests. Unlocks governance
-                  missions, Charmverse workspace, and project collaborations.
+                  Awarded during IRL events and quests. Unlocks access to the
+                  workspace, and project collaborations.
                 </p>
 
                 <div className="space-y-4">
                   <div className="flex items-start gap-3">
                     <Award className="text-brand-primary h-5 w-5 mt-0.5 flex-shrink-0" />
                     <p className="text-sm text-muted-foreground">
-                      Participate in governance missions
+                      Participate in missions
                     </p>
                   </div>
                   <div className="flex items-start gap-3">
                     <Users className="text-brand-primary h-5 w-5 mt-0.5 flex-shrink-0" />
                     <p className="text-sm text-muted-foreground">
-                      Access to exclusive Charmverse workspace
+                      Access to our workspace and earn reputation
                     </p>
                   </div>
                   <div className="flex items-start gap-3">
