@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { nexusExplorerAbi, nexusExplorerAddress } from "@/lib/abi/contracts"
 import { motion } from "framer-motion"
@@ -19,7 +19,6 @@ import {
 } from "lucide-react"
 import { useAccount, useReadContract } from "wagmi"
 import { useConnectModal } from "@rainbow-me/rainbowkit"
-import { celoAlfajores } from "viem/chains"
 import { currentChain } from "@/providers/RainbowKitWrapper"
 import { useAuth } from "@/providers/AuthProvider"
 
@@ -339,8 +338,8 @@ export default function Home() {
                   <div className="flex items-start gap-3">
                     <MessageSquare className="text-brand-secondary h-5 w-5 mt-0.5 flex-shrink-0" />
                     <p className="text-sm text-muted-foreground">
-                      Access to our workspace for coordination and
-                      community discussions
+                      Access to our workspace for coordination and community
+                      discussions
                     </p>
                   </div>
                   <div className="flex items-start gap-3">
