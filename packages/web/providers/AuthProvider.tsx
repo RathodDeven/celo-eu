@@ -62,10 +62,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     challengeMessage: null,
     challengeSignature: null,
   })
-
   // Load auth state from localStorage on mount and address change
   useEffect(() => {
     const loadAuthState = () => {
+      // Only run on client side
+      if (typeof window === "undefined") return
+
       try {
         const storedAuth = localStorage.getItem(AUTH_STORAGE_KEY)
         if (!storedAuth) {
@@ -144,9 +146,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     loadAuthState()
   }, [address])
-
   // Handle address changes and token validation
   useEffect(() => {
+    // Only run on client side
+    if (typeof window === "undefined") return
+
     // Don't clear auth state just because wallet is disconnected
     // Only clear when address actually changes or token is invalid
 
@@ -449,10 +453,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const clearError = useCallback(() => {
     setAuthState((prev) => ({ ...prev, error: null }))
   }, [])
-
   // Refresh token method
   const refreshAuthToken = useCallback(async (): Promise<boolean> => {
     try {
+      // Only run on client side
+      if (typeof window === "undefined") return false
+
       const storedAuth = localStorage.getItem(AUTH_STORAGE_KEY)
       if (!storedAuth) return false
 
@@ -532,24 +538,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           ...options.headers,
           Authorization: `Bearer ${authState.token}`,
         },
-      })
-
-      // If unauthorized, try to refresh token
+      }) // If unauthorized, try to refresh token
       if (response.status === 401) {
         const refreshed = await refreshAuthToken()
 
         if (refreshed) {
           // Retry with new token
-          const newAuthData = localStorage.getItem(AUTH_STORAGE_KEY)
-          if (newAuthData) {
-            const { token } = JSON.parse(newAuthData) as AuthData
-            response = await fetch(url, {
-              ...options,
-              headers: {
-                ...options.headers,
-                Authorization: `Bearer ${token}`,
-              },
-            })
+          if (typeof window !== "undefined") {
+            const newAuthData = localStorage.getItem(AUTH_STORAGE_KEY)
+            if (newAuthData) {
+              const { token } = JSON.parse(newAuthData) as AuthData
+              response = await fetch(url, {
+                ...options,
+                headers: {
+                  ...options.headers,
+                  Authorization: `Bearer ${token}`,
+                },
+              })
+            }
           }
         } else {
           // Refresh failed, need to re-authenticate

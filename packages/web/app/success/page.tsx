@@ -7,7 +7,7 @@ import { useEffect, useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { createPublicClient, http } from "viem"
 import { celo } from "viem/chains"
-import { currentChain } from "@/providers/WagmiWrapper"
+import { currentChain } from "@/providers/RainbowKitWrapper"
 import { nexusExplorerAbi, nexusExplorerAddress } from "@/lib/abi/contracts"
 
 export default function SuccessPage() {

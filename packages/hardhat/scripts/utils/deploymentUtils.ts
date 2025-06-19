@@ -218,13 +218,13 @@ export async function verifyUUPSProxy(
     implementationAddress,
     contractPath,
     constructorArgs
-  )  // 2. Verify the proxy contract
+  ) // 2. Verify the proxy contract
   console.log("🔍 Step 2: Verifying proxy contract...")
-  
+
   // Try automatic verification first
   try {
     console.log("� Attempting automatic proxy verification...")
-    
+
     // Method 1: Try basic verification first
     try {
       await hre.run("verify:verify", {
@@ -238,12 +238,13 @@ export async function verifyUUPSProxy(
         proxyVerified = true
       } else {
         console.log("ℹ️ Basic verification failed, trying as ERC1967Proxy...")
-        
+
         // Method 2: Try as ERC1967Proxy with constructor args
         await hre.run("verify:verify", {
           address: proxyAddress,
           constructorArguments: [implementationAddress, "0x"],
-          contract: "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol:ERC1967Proxy"
+          contract:
+            "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol:ERC1967Proxy",
         })
         console.log("✅ Proxy verified as ERC1967Proxy")
         proxyVerified = true
@@ -261,13 +262,19 @@ export async function verifyUUPSProxy(
       console.log(`📋 Implementation: ${implementationAddress}`)
       console.log("")
       console.log("Manual verification steps:")
-      console.log(`1. Go to: https://${hre.network.name === 'celo' ? 'celoscan.io' : 'alfajores.celoscan.io'}/address/${proxyAddress}`)
+      console.log(
+        `1. Go to: https://${
+          hre.network.name === "celo" ? "celoscan.io" : "alfajores.celoscan.io"
+        }/address/${proxyAddress}`
+      )
       console.log(`2. Click "More Options" → "Is this a proxy?"`)
       console.log(`3. Select "EIP-1967" as proxy type`)
       console.log(`4. Enter implementation address: ${implementationAddress}`)
       console.log(`5. Click "Verify"`)
       console.log("")
-      console.log("💡 After manual verification, you'll see 'Read as Proxy' and 'Write as Proxy' tabs")
+      console.log(
+        "💡 After manual verification, you'll see 'Read as Proxy' and 'Write as Proxy' tabs"
+      )
       proxyVerified = false
     }
   }
@@ -640,7 +647,7 @@ export async function upgradeUUPSProxy(
     deployedAt: Date.now(), // Update timestamp for new implementation
   }
 
-  await updateDeploymentInfo(network.name, contractName, newImplUpdateInfo)  // Verify new implementation
+  await updateDeploymentInfo(network.name, contractName, newImplUpdateInfo) // Verify new implementation
   if (verify) {
     console.log("🔍 Verifying new implementation contract...")
 
