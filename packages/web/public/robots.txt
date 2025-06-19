@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Sitemaps
+Sitemap: https://celo-eu.vercel.app/sitemap.xml
+
+# Rules for search engines
+Crawl-delay: 1

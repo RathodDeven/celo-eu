@@ -1,0 +1,30 @@
+{
+  "name": "Celo EU - Decentralized Europe Initiative",
+  "short_name": "Celo EU",
+  "description": "Join the Celo Europe community and earn exclusive NFT badges",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo-celoeu.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo-celoeu.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo-celoeu.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["finance", "utilities", "productivity"],
+  "lang": "en",
+  "dir": "ltr"
+}

@@ -20,7 +20,7 @@ import {
 import { useAccount, useReadContract } from "wagmi"
 import { useConnectModal } from "@rainbow-me/rainbowkit"
 import { celoAlfajores } from "viem/chains"
-import { currentChain } from "@/providers/WagmiWrapper"
+import { currentChain } from "@/providers/RainbowKitWrapper"
 import { useAuth } from "@/providers/AuthProvider"
 
 export default function Home() {
