@@ -145,14 +145,14 @@ export default function Home() {
   // Show loading indicator while checking token data
   if (isConnected && isSignedIn && isLoadingTokens) {
     return (
-      <div className="h-screen flex justify-center items-center bg-gradient-to-b from-brand-primary to-background">
+      <div className="h-screen flex justify-center items-center bg-gradient-to-b from-brand-primary to-background dark:from-blue-900 dark:to-slate-900">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="text-center text-white"
         >
           <div className="flex flex-col items-center">
-            <div className="w-12 h-12 border-4 border-brand-secondary border-t-transparent rounded-full animate-spin mb-4"></div>
+            <div className="w-12 h-12 border-4 border-brand-secondary dark:border-blue-400 border-t-transparent rounded-full animate-spin mb-4"></div>
             <p className="text-lg font-medium">Checking your badges...</p>
           </div>
         </motion.div>
@@ -164,11 +164,11 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-b from-background to-card overflow-hidden">
       {/* Hero Section */}
       <section className="relative pt-16 pb-12 md:pt-24 md:pb-20">
+        {" "}
         <div className="absolute inset-0 pointer-events-none overflow-hidden -z-10">
-          <div className="absolute w-[500px] h-[500px] rounded-full bg-brand-primary/20 top-0 -left-64 blur-3xl"></div>
-          <div className="absolute w-[500px] h-[500px] rounded-full bg-brand-secondary/20 -bottom-64 -right-64 blur-3xl"></div>
+          <div className="absolute w-[500px] h-[500px] rounded-full bg-brand-primary/20 dark:bg-blue-500/30 top-0 -left-64 blur-3xl"></div>
+          <div className="absolute w-[500px] h-[500px] rounded-full bg-brand-secondary/20 dark:bg-orange-500/30 -bottom-64 -right-64 blur-3xl"></div>
         </div>
-
         <div className="container mx-auto px-4 max-w-6xl">
           <motion.div
             className="flex flex-col items-center text-center"
@@ -184,9 +184,9 @@ export default function Home() {
                 height={180}
                 className="rounded-full shadow-xl border-4 border-brand-secondary"
                 priority
-              />
+              />{" "}
               <motion.div
-                className="absolute -bottom-2 -right-2 bg-brand-secondary text-background rounded-full p-2"
+                className="absolute -bottom-2 -right-2 bg-brand-secondary dark:bg-blue-500 text-background dark:text-white rounded-full p-2 border-2 border-white dark:border-slate-800"
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.8, type: "spring", stiffness: 500 }}
@@ -232,12 +232,12 @@ export default function Home() {
                 </span>
                 <span className="absolute inset-0 bg-gradient-to-r from-brand-secondary to-brand-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
               </button>
-            </motion.div>
+            </motion.div>{" "}
             {isConnected && isSignedIn && hasExplorerBadge && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mt-4 text-brand-secondary font-medium bg-brand-secondary/10 px-4 py-2 rounded-lg"
+                className="mt-4 text-brand-secondary dark:text-blue-400 font-medium bg-brand-secondary/10 dark:bg-blue-500/20 px-4 py-2 rounded-lg border border-brand-secondary/20 dark:border-blue-400/30"
               >
                 <div className="flex items-center gap-2">
                   <Award size={16} />
@@ -276,8 +276,12 @@ export default function Home() {
             variants={staggerContainer}
             className="text-center mb-12"
           >
+            {" "}
             <motion.div variants={fadeIn} className="inline-block mb-2">
-              <Shield size={32} className="mx-auto text-brand-secondary" />
+              <Shield
+                size={32}
+                className="mx-auto text-brand-secondary dark:text-blue-400"
+              />
             </motion.div>
             <motion.h2
               variants={fadeIn}
@@ -327,29 +331,27 @@ export default function Home() {
                     </span>
                   </div>
                 </div>
-
                 <p className="text-muted-foreground mb-8">
                   The first level of our membership is the Explorer Pass.
                   It&apos;s open to anyone and can be minted directly from our
                   dashboard.
-                </p>
-
+                </p>{" "}
                 <div className="space-y-4">
                   <div className="flex items-start gap-3">
-                    <MessageSquare className="text-brand-secondary h-5 w-5 mt-0.5 flex-shrink-0" />
+                    <MessageSquare className="text-brand-secondary dark:text-blue-400 h-5 w-5 mt-0.5 flex-shrink-0" />
                     <p className="text-sm text-muted-foreground">
                       Access to our workspace for coordination and community
                       discussions
                     </p>
                   </div>
                   <div className="flex items-start gap-3">
-                    <Calendar className="text-brand-secondary h-5 w-5 mt-0.5 flex-shrink-0" />
+                    <Calendar className="text-brand-secondary dark:text-blue-400 h-5 w-5 mt-0.5 flex-shrink-0" />
                     <p className="text-sm text-muted-foreground">
                       Early-bird access to local events and workshops
                     </p>
                   </div>
                   <div className="flex items-start gap-3">
-                    <Users className="text-brand-secondary h-5 w-5 mt-0.5 flex-shrink-0" />
+                    <Users className="text-brand-secondary dark:text-blue-400 h-5 w-5 mt-0.5 flex-shrink-0" />
                     <p className="text-sm text-muted-foreground">
                       Feedback channels and community support
                     </p>
@@ -371,15 +373,16 @@ export default function Home() {
               <div className="p-8">
                 <div className="mb-6 flex justify-between items-start">
                   <div className="flex items-center gap-3">
-                    <div className="bg-brand-secondary/10 p-3 rounded-full">
-                      <Star className="text-brand-secondary h-6 w-6" />
+                    {" "}
+                    <div className="bg-brand-secondary/10 dark:bg-orange-500/20 p-3 rounded-full border border-brand-secondary/20 dark:border-orange-400/30">
+                      <Star className="text-brand-secondary dark:text-orange-400 h-6 w-6" />
                     </div>
                     <h3 className="text-2xl font-bold text-foreground">
                       Contributor Badge
                     </h3>
-                  </div>
-                  <div className="bg-brand-secondary/10 px-3 py-1 rounded-full">
-                    <span className="text-sm font-medium text-brand-secondary">
+                  </div>{" "}
+                  <div className="bg-brand-secondary/10 dark:bg-blue-500/20 px-3 py-1 rounded-full border border-brand-secondary/20 dark:border-blue-400/30">
+                    <span className="text-sm font-medium text-brand-secondary dark:text-blue-400">
                       Level 2
                     </span>
                   </div>

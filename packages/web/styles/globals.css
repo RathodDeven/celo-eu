@@ -49,7 +49,6 @@
 
     --radius: 0.5rem;
   }
-
   .dark {
     --background: 213 100% 10%;
     --foreground: 0 0% 98%;
@@ -67,9 +66,9 @@
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
 
-    /* Reverse brand colors for dark mode */
-    --brand-primary: 48 100% 60%; /* Yellow-Gold for dark mode */
-    --brand-secondary: 213 100% 18%; /* Deep Celo Blue for dark mode */
+    /* Better contrast brand colors for dark mode */
+    --brand-primary: 48 100% 65%; /* Brighter Yellow-Gold for dark mode */
+    --brand-secondary: 213 85% 65%; /* Brighter Blue with better contrast */
 
     --muted: 213 30% 20%;
     --muted-foreground: 213 15% 70%;
@@ -126,5 +125,37 @@
     0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
 }
 
+/* Custom utilities for better dark mode contrast */
+@layer utilities {
+  .text-brand-secondary-contrast {
+    @apply text-brand-secondary;
+  }
+
+  .bg-brand-secondary-contrast {
+    @apply bg-brand-secondary;
+  }
+
+  /* Ensure good contrast for brand secondary elements in dark mode */
+  .dark .text-brand-secondary-contrast {
+    color: hsl(213 85% 75%); /* Even brighter blue for text */
+  }
+
+  .dark .bg-brand-secondary-contrast {
+    background-color: hsl(
+      213 70% 25%
+    ); /* Darker background variant for better contrast */
+  }
+
+  /* Special case for badges and important elements */
+  .badge-secondary-dark {
+    @apply bg-brand-secondary/20 text-brand-secondary border border-brand-secondary/30;
+  }
+
+  .dark .badge-secondary-dark {
+    background-color: hsl(213 70% 25% / 0.3);
+    color: hsl(213 85% 75%);
+    border-color: hsl(213 70% 35%);
+  }
+}
+
 /* Remove all other competing styles */
-/* Delete these conflicting rules from the end of your file */
