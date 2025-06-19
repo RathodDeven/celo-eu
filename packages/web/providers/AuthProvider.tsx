@@ -23,10 +23,6 @@ interface AuthState {
 interface AuthContextType extends AuthState {
   signIn: () => Promise<boolean>
   clearError: () => void
-  updateUserProfile: (
-    currentData: { name?: string; email?: string },
-    userAddress: string
-  ) => Promise<boolean>
   isWalletConnected: boolean
   connectedAddress: string | undefined
   makeAuthenticatedRequest: (
@@ -360,95 +356,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       return true
     } catch (error: any) {
-      console.error("Sign in error:", error)
+      console.error("Sign in error:", error);
       setAuthState((prev) => ({
         ...prev,
         isLoading: false,
         error: error.message || "Failed to sign in",
         challengeMessage: null,
         challengeSignature: null,
-      }))
+      }));
       return false
     }
   }, [address, isConnected, signMessageAsync])
-  const updateUserProfile = useCallback(
-    async (
-      currentData: { name?: string; email?: string },
-      userAddress: string
-    ) => {
-      setAuthState((prev) => ({ ...prev, isLoading: true, error: null }))
-
-      // Check 1: Wallet connected?
-      if (!address || !isConnected) {
-        setAuthState((prev) => ({
-          ...prev,
-          isLoading: false,
-          error: "Wallet not connected. Please connect your wallet.",
-        }))
-        return false
-      }
-
-      // Check 2: User authenticated?
-      if (!authState.token || !authState.signedAddress) {
-        setAuthState((prev) => ({
-          ...prev,
-          isLoading: false,
-          error: "User not authenticated. Please sign in.",
-        }))
-        return false
-      }
-
-      // Check 3: Address match?
-      if (address.toLowerCase() !== authState.signedAddress.toLowerCase()) {
-        setAuthState((prev) => ({
-          ...prev,
-          isLoading: false,
-          error:
-            "Connected wallet does not match the authenticated user. Please sign in again.",
-        }))
-        return false
-      }
-
-      try {
-        // Simple API call with JWT token - no signature verification needed!
-        const response = await fetch("/api/users", {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authState.token}`, // Use JWT token
-          },
-          body: JSON.stringify({
-            name: currentData.name,
-            email: currentData.email,
-          }),
-        })
-
-        const result = await response.json()
-
-        if (!response.ok) {
-          setAuthState((prev) => ({
-            ...prev,
-            isLoading: false,
-            error: result.error || "Failed to update profile.",
-          }))
-          return false
-        }
-
-        setAuthState((prev) => ({ ...prev, isLoading: false, error: null }))
-        return true
-      } catch (e: any) {
-        console.error("Update profile error:", e)
-        setAuthState((prev) => ({
-          ...prev,
-          isLoading: false,
-          error:
-            e.message || "An unexpected error occurred while updating profile.",
-        }))
-        return false
-      }
-    },
-    [address, isConnected, authState.token, authState.signedAddress]
-  )
 
   const clearError = useCallback(() => {
     setAuthState((prev) => ({ ...prev, error: null }))
@@ -566,13 +484,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return response
     },
     [authState.token, refreshAuthToken]
-  )
-  // Combine all state and functions into a single context value
+  )  // Combine all state and functions into a single context value
   const authContextValue: AuthContextType = {
     ...authState,
     signIn,
     clearError,
-    updateUserProfile,
     isWalletConnected: isConnected,
     connectedAddress: address,
     makeAuthenticatedRequest,
