@@ -12,7 +12,7 @@ interface BlogPost {
 }
 
 export default function BlogPage() {
-  const [posts, setPosts] = useState<BlogPost[]>([ // placeholder posts
+  const [posts, _setPosts] = useState<BlogPost[]>([ // placeholder posts
     {
       id: 1,
       title: "Welcome to the Celo Europe Blog",

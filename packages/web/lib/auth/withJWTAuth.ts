@@ -10,7 +10,7 @@ export interface AuthenticatedRequest extends NextRequest {
  * This replaces the signature verification middleware for most endpoints
  */
 export function withJWTAuth(
-  handler: (req: AuthenticatedRequest) => Promise<NextResponse>
+  handler: (_req: AuthenticatedRequest) => Promise<NextResponse>
 ) {
   return async (request: NextRequest) => {
     try {

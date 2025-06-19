@@ -104,9 +104,9 @@ function VekiProgramContent() {
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(
     null
   )
-  const [userExists, setUserExists] = useState<boolean | null>(null)
+  const [_userExists, setUserExists] = useState<boolean | null>(null)
   const [userCheckLoading, setUserCheckLoading] = useState(false)
-  const [isUserProfileComplete, setIsUserProfileComplete] =
+  const [_isUserProfileComplete, setIsUserProfileComplete] =
     useState<boolean>(false)
 
   // Username availability check

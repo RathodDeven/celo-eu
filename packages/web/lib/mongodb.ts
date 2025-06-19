@@ -18,13 +18,13 @@ interface MongooseConnection {
 }
 
 declare global {
-  var mongoose: MongooseConnection | undefined
+  var _mongoose: MongooseConnection | undefined
 }
 
-let cached = global.mongoose
+let cached = global._mongoose
 
 if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null }
+  cached = global._mongoose = { conn: null, promise: null }
 }
 
 async function connectDB(): Promise<typeof mongoose> {

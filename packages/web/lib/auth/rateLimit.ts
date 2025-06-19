@@ -65,7 +65,7 @@ export function checkRateLimit(
  * Rate limiting middleware for Next.js API routes
  */
 export function withRateLimit(
-  handler: (req: any, res?: any) => Promise<any>,
+  handler: (_req: any, _res?: any) => Promise<any>,
   options: RateLimitOptions
 ) {
   return async (request: any, response?: any) => {

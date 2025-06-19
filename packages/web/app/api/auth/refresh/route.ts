@@ -4,7 +4,7 @@ import {
   generateAuthToken,
   generateRefreshToken,
 } from "@/lib/auth/jwt"
-import { withRateLimit, rateLimitConfigs } from "@/lib/auth/rateLimit"
+import { withRateLimit } from "@/lib/auth/rateLimit"
 
 async function handleRefresh(request: NextRequest) {
   try {
