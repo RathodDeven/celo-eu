@@ -26,7 +26,8 @@ export function withSignatureVerification(
     ) {
       // For non-sensitive methods, just pass through
       return handler(request as VerifiedRequest) // Cast here if handler expects VerifiedRequest
-    }    let originalParsedBody
+    }
+    let originalParsedBody
     try {
       originalParsedBody = await request.json()
     } catch (_error) {
@@ -48,7 +49,7 @@ export function withSignatureVerification(
           { error: "Missing signature, message, or address for verification." },
           { status: 400 }
         )
-      }      // Validate request origin and timestamp for additional security
+      } // Validate request origin and timestamp for additional security
       const origin = request.headers.get("origin")
 
       // In production, validate against allowed origins

@@ -11,7 +11,8 @@ declare global {
 // Initialize the store with global persistence for development
 let store: Map<string, { message: string; timestamp: number }>
 
-if (process.env.NODE_ENV === "development") {  // In development, use global to persist across hot reloads
+if (process.env.NODE_ENV === "development") {
+  // In development, use global to persist across hot reloads
   if (!globalThis._challengeStore) {
     globalThis._challengeStore = new Map<
       string,
@@ -23,7 +24,8 @@ if (process.env.NODE_ENV === "development") {  // In development, use global to 
   } else {
     console.log(
       "[CHALLENGE_STORE] Reusing existing global challenge store for development"
-    )  }
+    )
+  }
   store = globalThis._challengeStore
 } else {
   // In production, use a regular Map
