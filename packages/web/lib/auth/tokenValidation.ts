@@ -9,7 +9,7 @@ export interface AuthenticatedRequest extends NextRequest {
  * Middleware to validate JWT tokens on protected routes
  */
 export function withTokenValidation(
-  handler: (req: AuthenticatedRequest) => Promise<NextResponse>
+  handler: (_req: AuthenticatedRequest) => Promise<NextResponse>
 ) {
   return async (request: NextRequest) => {
     // Extract token from Authorization header
@@ -65,7 +65,7 @@ export function extractToken(request: NextRequest): string | null {
  * Flexible token validation that supports multiple token sources
  */
 export function withFlexibleTokenValidation(
-  handler: (req: AuthenticatedRequest) => Promise<NextResponse>,
+  handler: (_req: AuthenticatedRequest) => Promise<NextResponse>,
   options: { required?: boolean } = { required: true }
 ) {
   return async (request: NextRequest) => {

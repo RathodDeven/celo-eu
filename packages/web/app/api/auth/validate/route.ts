@@ -19,9 +19,8 @@ const validateAuthToken = (
     if (tokenAge > maxAge) {
       return { valid: false }
     }
-
     return { valid: true, address: payload.address }
-  } catch (error) {
+  } catch (_error) {
     return { valid: false }
   }
 }

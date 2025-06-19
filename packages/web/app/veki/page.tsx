@@ -96,7 +96,6 @@ function VekiProgramContent() {
   })
   const [agreedToTerms, setAgreedToTerms] = useState(false)
   const [agreedToMarketing, setAgreedToMarketing] = useState(false)
-
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formErrors, setFormErrors] = useState<
     Partial<FormData & { terms: string }>
@@ -104,10 +103,7 @@ function VekiProgramContent() {
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(
     null
   )
-  const [userExists, setUserExists] = useState<boolean | null>(null)
   const [userCheckLoading, setUserCheckLoading] = useState(false)
-  const [isUserProfileComplete, setIsUserProfileComplete] =
-    useState<boolean>(false)
 
   // Username availability check
   useEffect(() => {
@@ -131,69 +127,62 @@ function VekiProgramContent() {
     const debounce = setTimeout(checkUsername, 500)
     return () => clearTimeout(debounce)
   }, [formData.username])
-
   // Check if user exists for the connected wallet & handle step navigation
   useEffect(() => {
-    const checkUserExistsAndProfile = async () => {
-      if (address && isConnected && isSignedIn) {
-        if (hasMinted === true) {
-          // If user has minted, they are redirected by the top-level `if (hasMinted)` block.
+    const checkUserProfile = async () => {
+      if (!address || !isConnected || !isSignedIn) {
+        // Reset to default state if not connected
+        setCurrentStep(1)
+        return
+      }
+
+      if (hasMinted === true) {
+        // If user has minted, they will be redirected by the top-level condition
+        return
+      }
+
+      setUserCheckLoading(true)
+      try {
+        const res = await fetch(`/api/users/exists?address=${address}`)
+        if (!res.ok) {
+          console.error("❌ API error checking user existence:", res.status)
+          setCurrentStep(1)
           return
         }
 
-        setUserCheckLoading(true)
-        try {
-          const res = await fetch(`/api/users/exists?address=${address}`)
-          if (!res.ok) {
-            console.error("API error checking user existence:", res.status)
-            setUserExists(false)
-            setIsUserProfileComplete(false)
-            setCurrentStep(1) // Default to registration on API error
-            return
-          }
-          const data = await res.json()
-          setUserExists(data.exists)
+        const data = await res.json()
+        console.log("🔍 Profile check result:", data)
 
-          if (data.exists && data.user) {
-            const { name, username, email } = data.user
-            // Also populate formData if user exists and details are present
-            if (name) setFormData((prev) => ({ ...prev, name }))
-            if (username) setFormData((prev) => ({ ...prev, username }))
-            if (email) setFormData((prev) => ({ ...prev, email }))
+        if (data.exists && data.user) {
+          // Pre-fill form with existing user data
+          const { name, username, email } = data.user
+          if (name) setFormData((prev) => ({ ...prev, name }))
+          if (username) setFormData((prev) => ({ ...prev, username }))
+          if (email) setFormData((prev) => ({ ...prev, email }))
 
-            const profileComplete = !!(name && username && email)
-            setIsUserProfileComplete(profileComplete)
-
-            if (profileComplete) {
-              // User exists and profile is complete, check mint status
-              await refetchHasMinted()
-              setCurrentStep(2) // Proceed to minting step
-            } else {
-              // User exists but profile is incomplete
-              setCurrentStep(1)
-            }
+          if (data.isProfileComplete) {
+            console.log("🚀 Profile complete, moving to step 2")
+            await refetchHasMinted()
+            setCurrentStep(2)
           } else {
-            // User does not exist
-            setIsUserProfileComplete(false)
+            console.log(
+              "📝 Profile incomplete, staying on step 1 for completion"
+            )
             setCurrentStep(1)
           }
-        } catch (e) {
-          console.error("Error checking user existence:", e)
-          setUserExists(null)
-          setIsUserProfileComplete(false)
-          setCurrentStep(1) // Fallback to step 1 on error
-        } finally {
-          setUserCheckLoading(false)
+        } else {
+          console.log("👤 New user, staying on step 1 for registration")
+          setCurrentStep(1)
         }
-      } else {
-        // Not connected or not signed in, reset to default state
-        setUserExists(null)
-        setIsUserProfileComplete(false)
+      } catch (error) {
+        console.error("❌ Error checking user profile:", error)
         setCurrentStep(1)
+      } finally {
+        setUserCheckLoading(false)
       }
     }
 
-    checkUserExistsAndProfile()
+    checkUserProfile()
   }, [address, isConnected, isSignedIn, refetchHasMinted, hasMinted])
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -258,9 +247,9 @@ function VekiProgramContent() {
         const errorData = await response.json()
         throw new Error(errorData.error || "Failed to save user data")
       }
-      setUserExists(true) // User is now created/updated
-      setIsUserProfileComplete(true) // Profile is now complete
-      setCurrentStep(2) // Move to next step (minting)
+      console.log("✅ User profile saved successfully")
+      // Move to minting step
+      setCurrentStep(2)
     } catch (error: any) {
       console.error("Form submission error:", error)
       setFormErrors({ email: error.message || "Something went wrong" })

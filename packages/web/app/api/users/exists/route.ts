@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import dbConnect from "@/lib/mongodb"
-import User from "@/lib/models/User"
+import User, { IUser } from "@/lib/models/User"
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
@@ -19,16 +19,45 @@ export async function GET(request: NextRequest) {
       { status: 400 }
     )
   }
-
   try {
     await dbConnect()
-
-    const user = await User.findOne({ address: address.toLowerCase() }).lean()
+    const user = (await User.findOne({
+      address: address.toLowerCase(),
+    }).lean()) as IUser | null
 
     if (user) {
-      return NextResponse.json({ exists: true, user }, { status: 200 })
+      // Check if profile is complete (all required fields present)
+      const hasName = !!(user.name && user.name.trim())
+      const hasEmail = !!(user.email && user.email.trim())
+      const hasUsername = !!(user.username && user.username.trim())
+      const isProfileComplete = hasName && hasEmail && hasUsername
+
+      return NextResponse.json(
+        {
+          exists: true,
+          user,
+          isProfileComplete,
+          missingFields: {
+            name: !hasName,
+            email: !hasEmail,
+            username: !hasUsername,
+          },
+        },
+        { status: 200 }
+      )
     } else {
-      return NextResponse.json({ exists: false }, { status: 200 })
+      return NextResponse.json(
+        {
+          exists: false,
+          isProfileComplete: false,
+          missingFields: {
+            name: true,
+            email: true,
+            username: true,
+          },
+        },
+        { status: 200 }
+      )
     }
   } catch (error) {
     console.error("Error checking user existence:", error)

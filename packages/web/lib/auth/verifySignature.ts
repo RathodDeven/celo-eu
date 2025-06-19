@@ -16,7 +16,7 @@ export interface VerifiedRequest extends NextRequest {
 }
 
 export function withSignatureVerification(
-  handler: (req: VerifiedRequest) => Promise<NextResponse>
+  handler: (_req: VerifiedRequest) => Promise<NextResponse>
 ) {
   return async (request: NextRequest) => {
     if (
@@ -27,11 +27,10 @@ export function withSignatureVerification(
       // For non-sensitive methods, just pass through
       return handler(request as VerifiedRequest) // Cast here if handler expects VerifiedRequest
     }
-
     let originalParsedBody
     try {
       originalParsedBody = await request.json()
-    } catch (error) {
+    } catch (_error) {
       return NextResponse.json(
         { error: "Invalid JSON in request body" },
         { status: 400 }
@@ -50,11 +49,8 @@ export function withSignatureVerification(
           { error: "Missing signature, message, or address for verification." },
           { status: 400 }
         )
-      }
-
-      // Validate request origin and timestamp for additional security
+      } // Validate request origin and timestamp for additional security
       const origin = request.headers.get("origin")
-      const referer = request.headers.get("referer")
 
       // In production, validate against allowed origins
       const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [

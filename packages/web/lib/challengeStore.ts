@@ -3,7 +3,7 @@
 
 // Make the challenge store persistent across hot reloads in development
 declare global {
-  var challengeStore:
+  var _challengeStore:
     | Map<string, { message: string; timestamp: number }>
     | undefined
 }
@@ -13,8 +13,8 @@ let store: Map<string, { message: string; timestamp: number }>
 
 if (process.env.NODE_ENV === "development") {
   // In development, use global to persist across hot reloads
-  if (!globalThis.challengeStore) {
-    globalThis.challengeStore = new Map<
+  if (!globalThis._challengeStore) {
+    globalThis._challengeStore = new Map<
       string,
       { message: string; timestamp: number }
     >()
@@ -26,7 +26,7 @@ if (process.env.NODE_ENV === "development") {
       "[CHALLENGE_STORE] Reusing existing global challenge store for development"
     )
   }
-  store = globalThis.challengeStore
+  store = globalThis._challengeStore
 } else {
   // In production, use a regular Map
   store = new Map<string, { message: string; timestamp: number }>()
