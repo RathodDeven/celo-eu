@@ -13,12 +13,12 @@ const teamMembers = [
   {
     name: "Bertrand",
     image: "/bertrand.png",
-    linkedin: "https://www.linkedin.com/in/bertrand/",
+    linkedin: "https://www.linkedin.com/in/bertrand-juglas/",
     refPage: "/referral/bertrand",
   },
   {
     name: "Meet the Builders",
-    image: "/erik.png",
+    image: "/ErikValle.jpg",
     refPage: "https://celoeu.org",
   },
 ];
