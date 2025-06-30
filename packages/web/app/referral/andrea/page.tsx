@@ -39,6 +39,15 @@ export default function ContributorPageAndrea() {
           <Linkedin size={28} />
         </Link>
 
+                <Link
+          href="https://t.me/andlopvic"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-foreground hover:text-brand-primary transition"
+        >
+          <MessageCircle size={26} />
+        </Link>
+
         <Link
           href="mailto:andrea@axmc.xyz"
           className="text-foreground hover:text-brand-primary transition"
