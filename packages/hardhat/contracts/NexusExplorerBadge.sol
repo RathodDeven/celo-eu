@@ -21,9 +21,20 @@ contract NexusExplorerBadge is
     uint256 private _nextTokenId;
     string private _baseBadgeURI;
     mapping(address => bool) public hasMinted;
+    
+    // Referral tracking mappings
+    mapping(address => address) public referredBy; // who referred this address
+    mapping(address => uint16) public referralCount; // how many people this address has referred
+    mapping(address => address[]) public referrals; // list of addresses referred by this address
 
     event ExplorerBadgeMinted(
         address indexed recipient,
+        uint256 indexed tokenId
+    );
+    
+    event ExplorerBadgeMintedWithReferrer(
+        address indexed recipient,
+        address indexed referrer,
         uint256 indexed tokenId
     );
 
@@ -73,6 +84,26 @@ contract NexusExplorerBadge is
         emit ExplorerBadgeMinted(recipient, tokenId);
     }
 
+    /// @notice Mint a badge with referrer tracking
+    function mintExplorerBadgeWithReferrer(address referrer) public {
+        require(!hasMinted[msg.sender], "Already minted");
+        require(referrer != msg.sender, "Cannot refer yourself");
+        require(referrer != address(0), "Invalid referrer address");
+        require(hasMinted[referrer], "Referrer must have minted a badge first");
+        
+        uint256 tokenId = _nextTokenId++;
+        _safeMint(msg.sender, tokenId);
+        _setTokenURI(tokenId, _baseBadgeURI);
+        hasMinted[msg.sender] = true;
+        
+        // Update referral tracking
+        referredBy[msg.sender] = referrer;
+        referralCount[referrer]++;
+        referrals[referrer].push(msg.sender);
+        
+        emit ExplorerBadgeMintedWithReferrer(msg.sender, referrer, tokenId);
+    }
+
     /// @notice Return all token IDs owned by an address
     function getNFTsByAddress(
         address owner
@@ -100,7 +131,9 @@ contract NexusExplorerBadge is
     /// Optional: allow the owner to update the base URI
     function updateBaseBadgeURI(string memory newUri) external onlyOwner {
         _baseBadgeURI = newUri;
-    }    // ───── Required Overrides ─────
+    }
+
+    // ───── Required Overrides ─────
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 

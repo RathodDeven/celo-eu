@@ -67,6 +67,16 @@ export function getAbiPath(network: string, contractName: string): string {
 }
 
 /**
+ * Custom JSON replacer function to handle BigInt values
+ */
+function bigIntReplacer(key: string, value: any): any {
+  if (typeof value === "bigint") {
+    return value.toString()
+  }
+  return value
+}
+
+/**
  * Save deployment information to file
  */
 export async function saveDeploymentInfo(
@@ -84,7 +94,10 @@ export async function saveDeploymentInfo(
 
   // Save deployment info
   const deploymentInfoPath = getDeploymentInfoPath(network, contractName)
-  fs.writeFileSync(deploymentInfoPath, JSON.stringify(deploymentInfo, null, 2))
+  fs.writeFileSync(
+    deploymentInfoPath,
+    JSON.stringify(deploymentInfo, bigIntReplacer, 2)
+  )
 
   // Save ABI
   const abiPath = getAbiPath(network, contractName)
@@ -377,12 +390,40 @@ export function listDeployments(network: string): string[] {
 }
 
 /**
+ * Increment version number for upgrades (semantic versioning)
+ */
+function incrementVersion(currentVersion: string): string {
+  try {
+    // Parse version in format "x.y.z"
+    const versionParts = currentVersion.split(".").map(Number)
+
+    if (
+      versionParts.length === 3 &&
+      versionParts.every((part) => !isNaN(part))
+    ) {
+      // Increment minor version and reset patch version
+      versionParts[1] += 1
+      versionParts[2] = 0
+      return versionParts.join(".")
+    } else {
+      // Fallback: if version format is unexpected, just increment the first number
+      const majorVersion = parseInt(currentVersion.split(".")[0]) || 1
+      return `${majorVersion + 1}.0.0`
+    }
+  } catch (error) {
+    // Fallback: start fresh if parsing fails
+    return "1.1.0"
+  }
+}
+
+/**
  * Update deployment info (for upgrades)
  */
 export async function updateDeploymentInfo(
   network: string,
   contractName: string,
-  updates: Partial<DeploymentInfo>
+  updates: Partial<DeploymentInfo>,
+  newAbi?: any[]
 ): Promise<void> {
   const existingInfo = loadDeploymentInfo(network, contractName)
   if (!existingInfo) {
@@ -393,10 +434,26 @@ export async function updateDeploymentInfo(
 
   const updatedInfo = { ...existingInfo, ...updates }
   const deploymentsDir = getDeploymentsDir(network)
-  const deploymentInfoPath = getDeploymentInfoPath(network, contractName)
 
-  fs.writeFileSync(deploymentInfoPath, JSON.stringify(updatedInfo, null, 2))
+  // Create directory if it doesn't exist
+  if (!fs.existsSync(deploymentsDir)) {
+    fs.mkdirSync(deploymentsDir, { recursive: true })
+  }
+
+  // Save updated deployment info
+  const deploymentInfoPath = getDeploymentInfoPath(network, contractName)
+  fs.writeFileSync(
+    deploymentInfoPath,
+    JSON.stringify(updatedInfo, bigIntReplacer, 2)
+  )
   console.log(`✅ Deployment info updated: ${deploymentInfoPath}`)
+
+  // Save new ABI if provided
+  if (newAbi) {
+    const abiPath = getAbiPath(network, contractName)
+    fs.writeFileSync(abiPath, JSON.stringify(newAbi, null, 2))
+    console.log(`✅ ABI updated: ${abiPath}`)
+  }
 }
 
 /**
@@ -624,11 +681,21 @@ export async function upgradeUUPSProxy(
       "  • OpenZeppelin reuses existing implementation for efficiency"
     )
 
+    // Get contract artifact for updated ABI (in case interface changed)
+    const artifact = await hre.artifacts.readArtifact(contractName)
+
     // Still update the deployment info to reflect the attempt
     const noChangeUpdateInfo = {
-      version: `${parseFloat(existingDeployment.version) + 0.1}.0`, // Increment version anyway
+      version: incrementVersion(existingDeployment.version), // Use proper version incrementing
     }
-    await updateDeploymentInfo(network.name, contractName, noChangeUpdateInfo)
+
+    // Update both deployment info and ABI
+    await updateDeploymentInfo(
+      network.name,
+      contractName,
+      noChangeUpdateInfo,
+      artifact.abi
+    )
 
     console.log(`🎉 ${contractName} upgrade completed (no changes needed)!`)
     return {
@@ -639,15 +706,26 @@ export async function upgradeUUPSProxy(
   }
 
   console.log(`✅ New Implementation: ${newImplementationAddress}`)
+
+  // Get contract artifact for updated ABI
+  const artifact = await hre.artifacts.readArtifact(contractName)
+
   // Update deployment info with new implementation
+  // Only reset verification status if implementation actually changed
   const newImplUpdateInfo = {
     implementationAddress: newImplementationAddress,
-    verified: false,
-    version: `${parseFloat(existingDeployment.version) + 0.1}.0`, // Increment version
+    verified: false, // Reset verification status for new implementation
+    version: incrementVersion(existingDeployment.version), // Use proper version incrementing
     deployedAt: Date.now(), // Update timestamp for new implementation
   }
 
-  await updateDeploymentInfo(network.name, contractName, newImplUpdateInfo) // Verify new implementation
+  // Update both deployment info and ABI in one call
+  await updateDeploymentInfo(
+    network.name,
+    contractName,
+    newImplUpdateInfo,
+    artifact.abi
+  ) // Verify new implementation
   if (verify) {
     console.log("🔍 Verifying new implementation contract...")
 

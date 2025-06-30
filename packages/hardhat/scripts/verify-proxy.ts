@@ -1,10 +1,6 @@
 #!/usr/bin/env node
 
-import {
-  verifyUUPSProxy,
-  parseDeploymentArgs,
-  loadDeploymentInfo,
-} from "./utils/deploymentUtils"
+import { verifyUUPSProxy, loadDeploymentInfo } from "./utils/deploymentUtils"
 import { HardhatRuntimeEnvironment } from "hardhat/types"
 
 /**
