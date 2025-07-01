@@ -796,9 +796,9 @@ function VekiProgramContent() {
                               {referrer.substring(0, 6)}...
                               {referrer.substring(referrer.length - 4)}
                             </span>{" "}
-                            hasn't minted their Explorer Badge yet. You can
-                            still mint your badge, but the referral won't be
-                            counted.
+                            hasn&apos;t minted their Explorer Badge yet. You can
+                            still mint your badge, but the referral won&apos;t
+                            be counted.
                           </>
                         )}
                       </p>

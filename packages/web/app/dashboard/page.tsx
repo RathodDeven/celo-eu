@@ -14,8 +14,14 @@ import {
   Copy,
   Check,
   Users,
+  Award,
 } from "lucide-react"
-import { nexusExplorerAbi, nexusExplorerAddress } from "@/lib/abi/contracts"
+import {
+  nexusExplorerAbi,
+  nexusExplorerAddress,
+  contributorPassAbi,
+  contributorPassAddress,
+} from "@/lib/abi/contracts"
 import { useReadContract } from "wagmi"
 import { useAuth } from "@/providers/AuthProvider"
 import { useState, useEffect, useCallback } from "react"
@@ -91,6 +97,18 @@ function DashboardContent() {
       address: nexusExplorerAddress,
       abi: nexusExplorerAbi,
       functionName: "referralCount",
+      args: address ? [address] : undefined,
+      query: {
+        enabled: !!address && isConnected && isSignedIn,
+      },
+    })
+
+  // Contributor Pass Check
+  const { data: hasContributorPass, isLoading: contributorLoading } =
+    useReadContract({
+      address: contributorPassAddress,
+      abi: contributorPassAbi,
+      functionName: "hasMinted",
       args: address ? [address] : undefined,
       query: {
         enabled: !!address && isConnected && isSignedIn,
@@ -174,7 +192,7 @@ function DashboardContent() {
   useEffect(() => {
     if (!address || !referralCount) return
     fetchAllReferrals()
-  }, [address, referralCount])
+  }, [address, referralCount, fetchAllReferrals])
   const handleEditProfileInputChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -242,6 +260,7 @@ function DashboardContent() {
   if (
     userProfileLoading ||
     explorerLoading ||
+    contributorLoading ||
     referralCountLoading ||
     fetchingReferrals
   ) {
@@ -496,87 +515,101 @@ function DashboardContent() {
                 Elevate your status by contributing to projects and initiatives.
               </p>
             </div>
-            <Button
-              disabled
-              className="w-full mt-auto bg-gray-300 text-gray-500 cursor-not-allowed"
-              title="Learn More (Coming Soon)"
-              onClick={() => {}}
-            >
-              Learn More (Coming Soon)
-            </Button>
+            {hasContributorPass ? (
+              <div className="flex items-center text-green-500 font-medium">
+                <Award className="mr-2 h-5 w-5" />
+                Pass Claimed
+              </div>
+            ) : (
+              <Button
+                onClick={() => router.push("/contributor")}
+                className="w-full mt-auto bg-primary hover:bg-primary/90 text-primary-foreground"
+                title="Claim Contributor Pass"
+              >
+                <ArrowRightCircle className="mr-2 h-5 w-5" /> Claim Contributor
+                Pass
+              </Button>
+            )}
           </motion.div>
         </div>
         {/* Referral Section */}
-        <motion.div
-          variants={cardVariants}
-          initial="hidden"
-          animate="visible"
-          className="mt-8 p-6 bg-card rounded-xl shadow-lg border border-border"
-        >
-          <div className="flex justify-between items-start">
-            <div>
-              <h2 className="text-2xl font-semibold text-foreground mb-1">
-                Refer a Friend
-              </h2>
-              <p className="text-sm text-muted-foreground mb-4">
-                Invite others to mint their Explorer Badge and grow the
-                community.
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              onClick={handleCopy}
-              className="shrink-0"
-              title="Copy referral link"
+        <>
+          {hasExplorerBadge && (
+            <motion.div
+              variants={cardVariants}
+              initial="hidden"
+              animate="visible"
+              className="mt-8 p-6 bg-card rounded-xl shadow-lg border border-border"
             >
-              {copied ? (
-                <Check className="h-4 w-4 mr-2" />
-              ) : (
-                <Copy className="h-4 w-4 mr-2" />
-              )}
-              {copied ? "Copied!" : "Copy Link"}
-            </Button>
-          </div>
-
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="flex items-center space-x-3">
-              <Users className="h-6 w-6 text-primary" />
-              <div>
-                <Label className="text-xs text-muted-foreground">
-                  Total Referrals
-                </Label>
-                <p className="text-lg font-medium text-foreground">
-                  {referralCount?.toString() || "0"}
-                </p>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">
-                Referred Addresses
-              </Label>
-              {referralsList && referralsList.length > 0 ? (
-                <div className="space-y-1 text-sm text-foreground max-h-24 overflow-y-auto">
-                  {referralsList.map((refAddress, index) => (
-                    <p
-                      key={index}
-                      className="truncate"
-                      title={refAddress}
-                    >{`${refAddress.substring(0, 6)}...${refAddress.substring(
-                      refAddress.length - 4
-                    )}`}</p>
-                  ))}
+              <div className="flex justify-between items-start">
+                <div>
+                  <h2 className="text-2xl font-semibold text-foreground mb-1">
+                    Refer a Friend
+                  </h2>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Invite others to mint their Explorer Badge and grow the
+                    community.
+                  </p>
                 </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  {fetchingReferrals
-                    ? "Loading referrals..."
-                    : "No referrals yet."}
-                </p>
-              )}
-            </div>
-          </div>
-        </motion.div>
-      </div>{" "}
+                <Button
+                  variant="outline"
+                  onClick={handleCopy}
+                  className="shrink-0"
+                  title="Copy referral link"
+                >
+                  {copied ? (
+                    <Check className="h-4 w-4 mr-2" />
+                  ) : (
+                    <Copy className="h-4 w-4 mr-2" />
+                  )}
+                  {copied ? "Copied!" : "Copy Link"}
+                </Button>
+              </div>
+
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="flex items-center space-x-3">
+                  <Users className="h-6 w-6 text-primary" />
+                  <div>
+                    <Label className="text-xs text-muted-foreground">
+                      Total Referrals
+                    </Label>
+                    <p className="text-lg font-medium text-foreground">
+                      {referralCount?.toString() || "0"}
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">
+                    Referred Addresses
+                  </Label>
+                  {referralsList && referralsList.length > 0 ? (
+                    <div className="space-y-1 text-sm text-foreground max-h-24 overflow-y-auto">
+                      {referralsList.map((refAddress, index) => (
+                        <p
+                          key={index}
+                          className="truncate"
+                          title={refAddress}
+                        >{`${refAddress.substring(
+                          0,
+                          6
+                        )}...${refAddress.substring(
+                          refAddress.length - 4
+                        )}`}</p>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      {fetchingReferrals
+                        ? "Loading referrals..."
+                        : "No referrals yet."}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </>
+      </div>
     </div>
   )
 }
