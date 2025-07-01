@@ -1339,4 +1339,4 @@ export const contributorPassAbi = [
 ]
 
 export const contributorPassAddress =
-  "0x2C7eB85aC7d7cfecED2bB98b4eDeBeab5ac7a477"
+  "0xBF87500b7D9AbDc3849a846dd3a4d2EE206E4534"
