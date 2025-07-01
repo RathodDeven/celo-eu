@@ -20,6 +20,7 @@
     "@types/mocha": "^10.0.7",
     "@types/node": "^22.15.3",
     "chai": "^4.3.10",
+    "cross-env": "^7.0.3",
     "ethers": "^6.6.2",
     "hardhat": "^2.22.2",
     "hardhat-gas-reporter": "^1.0.8",
@@ -43,8 +44,10 @@
     "prettier": "prettier --write 'contracts/**/*.sol' '**/*.ts'",
     "deploy:nexus": "hardhat run scripts/deploy-nexus-badge.ts",
     "upgrade:nexus": "hardhat run scripts/upgrade-nexus-badge.ts",
-    "verify:proxy": "hardhat run scripts/verify-proxy.ts",
     "verify:nexus": "cross-env CONTRACT_NAME=NexusExplorerBadge hardhat run scripts/verify-proxy.ts",
+    "deploy:contributor": "hardhat run scripts/deploy-contributor-pass.ts",
+    "upgrade:contributor": "hardhat run scripts/upgrade-contributor-pass.ts",
+    "verify:contributor": "cross-env CONTRACT_NAME=ContributorPass hardhat run scripts/verify-proxy.ts",
     "deployments": "hardhat deployments",
     "deployment-info": "hardhat deployment-info"
   }

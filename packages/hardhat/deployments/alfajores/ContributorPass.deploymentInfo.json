@@ -1,0 +1,19 @@
+{
+  "contractName": "ContributorPass",
+  "network": "alfajores",
+  "chainId": 44787,
+  "proxyAddress": "0x2C7eB85aC7d7cfecED2bB98b4eDeBeab5ac7a477",
+  "implementationAddress": "0x5B031Ed692888f81c6af66fb51e16C19d33a17bd",
+  "adminAddress": "0x0000000000000000000000000000000000000000",
+  "deployer": "0xB522133dBd9C8B424429D89d821aeb2a115dB678",
+  "deployedAt": 1751287871357,
+  "blockNumber": 50332545,
+  "transactionHash": "0x3535662492877d135da8e2ea0eafea49d80b328ed4243672c479a2bf73932104",
+  "constructorArgs": [
+    "0xB522133dBd9C8B424429D89d821aeb2a115dB678",
+    "0xF65A8364D80401b9F124b69aCeA1C91Bf538C004",
+    "1000000000000000"
+  ],
+  "verified": true,
+  "version": "1.0.0"
+}
