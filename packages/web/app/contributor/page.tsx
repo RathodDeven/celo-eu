@@ -420,6 +420,29 @@ function ContributorPassContent() {
                 </div>
               )}
 
+              {/* Soulbound NFT Warning */}
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 rounded-xl p-6 border border-amber-200 dark:border-amber-800">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <ShieldCheck
+                      className="text-amber-600 dark:text-amber-400"
+                      size={18}
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-amber-800 dark:text-amber-200 mb-2">
+                      ⚠️ Soulbound NFT
+                    </h3>
+                    <p className="text-amber-700 dark:text-amber-300 text-sm leading-relaxed">
+                      This Contributor Pass is a <strong>soulbound NFT</strong>{" "}
+                      that cannot be transferred to another wallet once claimed.
+                      Please ensure you&apos;re using the correct wallet address
+                      before proceeding with the claim.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               {/* Claim Action */}
               <div className="bg-card rounded-xl p-6 border border-border">
                 {claimError && (
