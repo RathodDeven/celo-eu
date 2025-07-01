@@ -9,6 +9,16 @@ import {
   nexusExplorerAddress as nexusExplorerAddressCelo,
 } from "./celo/NexusExplorerBadge"
 
+import {
+  contributorPassAbi as contributorPassAbiAlfajores,
+  contributorPassAddress as contributorPassAddressAlfajores,
+} from "./alfajores/ContributorPass"
+
+import {
+  contributorPassAbi as contributorPassAbiCelo,
+  contributorPassAddress as contributorPassAddressCelo,
+} from "./celo/ContributorPass"
+
 // Check environment variable to determine which contracts to use
 const isProduction = process.env.NEXT_PUBLIC_IS_PROD === "true"
 
@@ -19,6 +29,14 @@ export const nexusExplorerAbi = isProduction
 export const nexusExplorerAddress = isProduction
   ? nexusExplorerAddressCelo
   : nexusExplorerAddressAlfajores
+
+export const contributorPassAbi = isProduction
+  ? contributorPassAbiCelo
+  : contributorPassAbiAlfajores
+
+export const contributorPassAddress = isProduction
+  ? contributorPassAddressCelo
+  : contributorPassAddressAlfajores
 
 // Also export the chain information
 export const currentChain = isProduction ? "celo" : "alfajores"

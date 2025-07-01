@@ -11,6 +11,7 @@ import { encodeFunctionData } from "viem"
 import { useState, useEffect } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import Image from "next/image"
+import { useSearchParams } from "next/navigation"
 
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -35,6 +36,7 @@ import {
   UserCircle,
   UserPlus,
   PartyPopper,
+  Users,
 } from "lucide-react"
 
 import { nexusExplorerAddress, nexusExplorerAbi } from "@/lib/abi/contracts"
@@ -49,6 +51,7 @@ interface FormData {
 
 function VekiProgramContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { address, isConnected } = useAccount()
   const chainId = useChainId()
   const {
@@ -104,6 +107,25 @@ function VekiProgramContent() {
     null
   )
   const [userCheckLoading, setUserCheckLoading] = useState(false)
+  const [referrer, setReferrer] = useState<string | null>(null)
+
+  const { data: referrerHasMinted } = useReadContract({
+    address: nexusExplorerAddress,
+    abi: nexusExplorerAbi,
+    functionName: "hasMinted",
+    args: referrer ? [referrer] : undefined,
+    query: {
+      enabled: !!referrer,
+    },
+  })
+
+  // Username availability check
+  useEffect(() => {
+    const ref = searchParams.get("ref")
+    if (ref) {
+      setReferrer(ref)
+    }
+  }, [searchParams])
 
   // Username availability check
   useEffect(() => {
@@ -262,20 +284,28 @@ function VekiProgramContent() {
     if (!address) return
 
     try {
-      // Get the Divvi referral data suffix
+      let data: `0x${string}`
+      if (referrer && referrerHasMinted) {
+        // Encode the function call with referrer
+        data = encodeFunctionData({
+          abi: nexusExplorerAbi,
+          functionName: "mintExplorerBadgeWithReferrer",
+          args: [referrer as `0x${string}`],
+        })
+      } else {
+        // Encode the original function call
+        data = encodeFunctionData({
+          abi: nexusExplorerAbi,
+          functionName: "mintExplorerBadge",
+          args: [],
+        })
+      }
+
+      // Append the Divvi referral suffix if applicable
       const dataSuffix = getDivviDataSuffix()
+      const dataWithReferral = (data + dataSuffix) as `0x${string}`
 
-      // Encode the original function call
-      const originalData = encodeFunctionData({
-        abi: nexusExplorerAbi,
-        functionName: "mintExplorerBadge",
-        args: [],
-      })
-
-      // Append the Divvi referral suffix
-      const dataWithReferral = (originalData + dataSuffix) as `0x${string}`
-
-      // Use sendTransaction to include custom data with Divvi referral
+      // Use sendTransaction to include custom data
       sendTransaction({
         to: nexusExplorerAddress,
         data: dataWithReferral,
@@ -710,6 +740,69 @@ function VekiProgramContent() {
                         : mintError?.message?.slice(0, 100) + "..." ||
                           "Transaction failed. Please try again."}
                     </p>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Referral Information */}
+              {referrer && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`mb-6 p-4 rounded-lg border ${
+                    referrerHasMinted
+                      ? "bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800"
+                      : "bg-yellow-50 border-yellow-200 dark:bg-yellow-950 dark:border-yellow-800"
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    {referrerHasMinted ? (
+                      <Users className="text-green-600 h-5 w-5 mt-0.5 flex-shrink-0" />
+                    ) : (
+                      <AlertCircle className="text-yellow-600 h-5 w-5 mt-0.5 flex-shrink-0" />
+                    )}
+                    <div>
+                      <h4
+                        className={`font-medium ${
+                          referrerHasMinted
+                            ? "text-green-800 dark:text-green-200"
+                            : "text-yellow-800 dark:text-yellow-200"
+                        }`}
+                      >
+                        {referrerHasMinted
+                          ? "✨ Referral Active"
+                          : "⚠️ Referral Not Available"}
+                      </h4>
+                      <p
+                        className={`text-sm mt-1 ${
+                          referrerHasMinted
+                            ? "text-green-700 dark:text-green-300"
+                            : "text-yellow-700 dark:text-yellow-300"
+                        }`}
+                      >
+                        {referrerHasMinted ? (
+                          <>
+                            You were referred by{" "}
+                            <span className="font-mono">
+                              {referrer.substring(0, 6)}...
+                              {referrer.substring(referrer.length - 4)}
+                            </span>
+                            . They will be credited for your referral!
+                          </>
+                        ) : (
+                          <>
+                            Referrer{" "}
+                            <span className="font-mono">
+                              {referrer.substring(0, 6)}...
+                              {referrer.substring(referrer.length - 4)}
+                            </span>{" "}
+                            hasn&apos;t minted their Explorer Badge yet. You can
+                            still mint your badge, but the referral won&apos;t
+                            be counted.
+                          </>
+                        )}
+                      </p>
+                    </div>
                   </div>
                 </motion.div>
               )}

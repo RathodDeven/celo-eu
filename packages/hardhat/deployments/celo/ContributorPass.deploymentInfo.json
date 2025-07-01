@@ -1,0 +1,19 @@
+{
+  "contractName": "ContributorPass",
+  "network": "celo",
+  "chainId": 42220,
+  "proxyAddress": "0xBF87500b7D9AbDc3849a846dd3a4d2EE206E4534",
+  "implementationAddress": "0xc38A2C181BA647f70e24BfDC2941f4f18daC670B",
+  "adminAddress": "0x0000000000000000000000000000000000000000",
+  "deployer": "0xB522133dBd9C8B424429D89d821aeb2a115dB678",
+  "deployedAt": 1751364586874,
+  "blockNumber": 39463826,
+  "transactionHash": "0x70c2ce55ca2f3ad0b0d17832772a8322b60d9ede33bb9feb3c25d8dd2c5c6887",
+  "constructorArgs": [
+    "0xB522133dBd9C8B424429D89d821aeb2a115dB678",
+    "0x36FdB2cA630eb606ED7BE343a9ebF8AEcc5A24EC",
+    "2000000000000000000"
+  ],
+  "verified": true,
+  "version": "1.0.0"
+}

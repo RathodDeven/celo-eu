@@ -1,8 +1,29 @@
-export const nexusExplorerAbi = [
+export const contributorPassAbi = [
   {
     inputs: [],
     stateMutability: "nonpayable",
     type: "constructor",
+  },
+  {
+    inputs: [],
+    name: "AccessControlBadConfirmation",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "account",
+        type: "address",
+      },
+      {
+        internalType: "bytes32",
+        name: "neededRole",
+        type: "bytes32",
+      },
+    ],
+    name: "AccessControlUnauthorizedAccount",
+    type: "error",
   },
   {
     inputs: [
@@ -183,6 +204,11 @@ export const nexusExplorerAbi = [
   },
   {
     inputs: [],
+    name: "ReentrancyGuardReentrantCall",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "UUPSUnauthorizedCallContext",
     type: "error",
   },
@@ -196,6 +222,44 @@ export const nexusExplorerAbi = [
     ],
     name: "UUPSUnsupportedProxiableUUID",
     type: "error",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "user",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "admin",
+        type: "address",
+      },
+    ],
+    name: "AdminApprovalGranted",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "user",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "admin",
+        type: "address",
+      },
+    ],
+    name: "AdminApprovalRevoked",
+    type: "event",
   },
   {
     anonymous: false,
@@ -270,19 +334,19 @@ export const nexusExplorerAbi = [
     anonymous: false,
     inputs: [
       {
-        indexed: true,
-        internalType: "address",
-        name: "recipient",
-        type: "address",
+        indexed: false,
+        internalType: "uint256",
+        name: "oldAmount",
+        type: "uint256",
       },
       {
-        indexed: true,
+        indexed: false,
         internalType: "uint256",
-        name: "tokenId",
+        name: "newAmount",
         type: "uint256",
       },
     ],
-    name: "ExplorerBadgeMinted",
+    name: "CeloRewardUpdated",
     type: "event",
   },
   {
@@ -296,18 +360,18 @@ export const nexusExplorerAbi = [
       },
       {
         indexed: true,
-        internalType: "address",
-        name: "referrer",
-        type: "address",
-      },
-      {
-        indexed: true,
         internalType: "uint256",
         name: "tokenId",
         type: "uint256",
       },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "celoReward",
+        type: "uint256",
+      },
     ],
-    name: "ExplorerBadgeMintedWithReferrer",
+    name: "ContributorPassClaimed",
     type: "event",
   },
   {
@@ -340,6 +404,44 @@ export const nexusExplorerAbi = [
     anonymous: false,
     inputs: [
       {
+        indexed: false,
+        internalType: "uint16",
+        name: "oldCount",
+        type: "uint16",
+      },
+      {
+        indexed: false,
+        internalType: "uint16",
+        name: "newCount",
+        type: "uint16",
+      },
+    ],
+    name: "MinReferralCountUpdated",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "address",
+        name: "oldAddress",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "address",
+        name: "newAddress",
+        type: "address",
+      },
+    ],
+    name: "NexusExplorerBadgeAddressUpdated",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
         indexed: true,
         internalType: "address",
         name: "previousOwner",
@@ -366,6 +468,81 @@ export const nexusExplorerAbi = [
       },
     ],
     name: "Paused",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "bytes32",
+        name: "role",
+        type: "bytes32",
+      },
+      {
+        indexed: true,
+        internalType: "bytes32",
+        name: "previousAdminRole",
+        type: "bytes32",
+      },
+      {
+        indexed: true,
+        internalType: "bytes32",
+        name: "newAdminRole",
+        type: "bytes32",
+      },
+    ],
+    name: "RoleAdminChanged",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "bytes32",
+        name: "role",
+        type: "bytes32",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "account",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "sender",
+        type: "address",
+      },
+    ],
+    name: "RoleGranted",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "bytes32",
+        name: "role",
+        type: "bytes32",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "account",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "sender",
+        type: "address",
+      },
+    ],
+    name: "RoleRevoked",
     type: "event",
   },
   {
@@ -421,6 +598,32 @@ export const nexusExplorerAbi = [
   },
   {
     inputs: [],
+    name: "ADMIN_ROLE",
+    outputs: [
+      {
+        internalType: "bytes32",
+        name: "",
+        type: "bytes32",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "DEFAULT_ADMIN_ROLE",
+    outputs: [
+      {
+        internalType: "bytes32",
+        name: "",
+        type: "bytes32",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
     name: "UPGRADE_INTERFACE_VERSION",
     outputs: [
       {
@@ -454,6 +657,38 @@ export const nexusExplorerAbi = [
     inputs: [
       {
         internalType: "address",
+        name: "user",
+        type: "address",
+      },
+    ],
+    name: "approveForMinting",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    name: "approvedMinters",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
         name: "owner",
         type: "address",
       },
@@ -472,12 +707,43 @@ export const nexusExplorerAbi = [
   {
     inputs: [
       {
+        internalType: "address",
+        name: "user",
+        type: "address",
+      },
+    ],
+    name: "canMint",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+      {
+        internalType: "string",
+        name: "",
+        type: "string",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "celoRewardAmount",
+    outputs: [
+      {
         internalType: "uint256",
-        name: "tokenId",
+        name: "",
         type: "uint256",
       },
     ],
-    name: "burn",
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "claimContributorPass",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -496,6 +762,19 @@ export const nexusExplorerAbi = [
         internalType: "address",
         name: "",
         type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getContractBalance",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
       },
     ],
     stateMutability: "view",
@@ -523,6 +802,43 @@ export const nexusExplorerAbi = [
   {
     inputs: [
       {
+        internalType: "bytes32",
+        name: "role",
+        type: "bytes32",
+      },
+    ],
+    name: "getRoleAdmin",
+    outputs: [
+      {
+        internalType: "bytes32",
+        name: "",
+        type: "bytes32",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes32",
+        name: "role",
+        type: "bytes32",
+      },
+      {
+        internalType: "address",
+        name: "account",
+        type: "address",
+      },
+    ],
+    name: "grantRole",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
         internalType: "address",
         name: "",
         type: "address",
@@ -542,9 +858,43 @@ export const nexusExplorerAbi = [
   {
     inputs: [
       {
+        internalType: "bytes32",
+        name: "role",
+        type: "bytes32",
+      },
+      {
+        internalType: "address",
+        name: "account",
+        type: "address",
+      },
+    ],
+    name: "hasRole",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
         internalType: "address",
         name: "initialOwner",
         type: "address",
+      },
+      {
+        internalType: "address",
+        name: "_nexusExplorerBadgeAddress",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "_celoRewardAmount",
+        type: "uint256",
       },
     ],
     name: "initialize",
@@ -578,35 +928,15 @@ export const nexusExplorerAbi = [
   },
   {
     inputs: [],
-    name: "mintExplorerBadge",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
+    name: "minReferralCount",
+    outputs: [
       {
-        internalType: "address",
-        name: "recipient",
-        type: "address",
+        internalType: "uint16",
+        name: "",
+        type: "uint16",
       },
     ],
-    name: "mintExplorerBadge",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "referrer",
-        type: "address",
-      },
-    ],
-    name: "mintExplorerBadgeWithReferrer",
-    outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "view",
     type: "function",
   },
   {
@@ -617,6 +947,19 @@ export const nexusExplorerAbi = [
         internalType: "string",
         name: "",
         type: "string",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "nexusExplorerBadge",
+    outputs: [
+      {
+        internalType: "contract INexusExplorerBadge",
+        name: "",
+        type: "address",
       },
     ],
     stateMutability: "view",
@@ -688,70 +1031,57 @@ export const nexusExplorerAbi = [
     type: "function",
   },
   {
-    inputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    name: "referralCount",
-    outputs: [
-      {
-        internalType: "uint16",
-        name: "",
-        type: "uint16",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    name: "referrals",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    name: "referredBy",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
     inputs: [],
     name: "renounceOwnership",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes32",
+        name: "role",
+        type: "bytes32",
+      },
+      {
+        internalType: "address",
+        name: "callerConfirmation",
+        type: "address",
+      },
+    ],
+    name: "renounceRole",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "user",
+        type: "address",
+      },
+    ],
+    name: "revokeApproval",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes32",
+        name: "role",
+        type: "bytes32",
+      },
+      {
+        internalType: "address",
+        name: "account",
+        type: "address",
+      },
+    ],
+    name: "revokeRole",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -821,6 +1151,45 @@ export const nexusExplorerAbi = [
       },
     ],
     name: "setApprovalForAll",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_celoRewardAmount",
+        type: "uint256",
+      },
+    ],
+    name: "setCeloRewardAmount",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint16",
+        name: "_minReferralCount",
+        type: "uint16",
+      },
+    ],
+    name: "setMinReferralCount",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "_nexusExplorerBadgeAddress",
+        type: "address",
+      },
+    ],
+    name: "setNexusExplorerBadgeAddress",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -927,7 +1296,7 @@ export const nexusExplorerAbi = [
         type: "string",
       },
     ],
-    name: "updateBaseBadgeURI",
+    name: "updateBaseContributorURI",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -950,6 +1319,24 @@ export const nexusExplorerAbi = [
     stateMutability: "payable",
     type: "function",
   },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+    ],
+    name: "withdrawCelo",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    stateMutability: "payable",
+    type: "receive",
+  },
 ]
-// Celo mainnet (production) address - Replace with actual mainnet address when deployed
-export const nexusExplorerAddress = "0x36FdB2cA630eb606ED7BE343a9ebF8AEcc5A24EC"
+
+export const contributorPassAddress =
+  "0xBF87500b7D9AbDc3849a846dd3a4d2EE206E4534"

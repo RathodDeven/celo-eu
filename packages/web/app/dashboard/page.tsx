@@ -1,25 +1,5 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
-import { useRouter } from "next/navigation"
-import Image from "next/image"
-import { motion } from "framer-motion"
-import { useAccount, useReadContract } from "wagmi"
-import { useAuth } from "@/providers/AuthProvider"
-import { AuthGuard } from "@/components/auth/AuthGuard"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose,
-} from "@/components/ui/dialog"
 import {
   Loader2,
   User,
@@ -30,10 +10,39 @@ import {
   AlertTriangle,
   Mail as MailIcon, // Alias Mail to avoid conflict with User model
   UserCircle2, // Using UserCircle2 for profile icon
-  Briefcase, // Icon for Contributor Program
   AtSign, // Added for username icon
+  Copy,
+  Check,
+  Users,
+  Award,
 } from "lucide-react"
-import { nexusExplorerAddress, nexusExplorerAbi } from "@/lib/abi/contracts"
+import {
+  nexusExplorerAbi,
+  nexusExplorerAddress,
+  contributorPassAbi,
+  contributorPassAddress,
+} from "@/lib/abi/contracts"
+import { useReadContract } from "wagmi"
+import { useAuth } from "@/providers/AuthProvider"
+import { useState, useEffect, useCallback } from "react"
+import { useAccount } from "wagmi"
+import { useRouter } from "next/navigation"
+import { motion } from "framer-motion"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import Image from "next/image"
+import { AuthGuard } from "@/components/auth/AuthGuard"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog"
 
 interface UserProfile {
   name?: string
@@ -64,6 +73,9 @@ function DashboardContent() {
   })
   const [editProfileError, setEditProfileError] = useState<string | null>(null)
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const [referralsList, setReferralsList] = useState<string[]>([])
+  const [fetchingReferrals, setFetchingReferrals] = useState(false)
 
   // Explorer Badge Check
   const {
@@ -79,6 +91,62 @@ function DashboardContent() {
       enabled: !!address && isConnected && isSignedIn,
     },
   })
+
+  const { data: referralCount, isLoading: referralCountLoading } =
+    useReadContract({
+      address: nexusExplorerAddress,
+      abi: nexusExplorerAbi,
+      functionName: "referralCount",
+      args: address ? [address] : undefined,
+      query: {
+        enabled: !!address && isConnected && isSignedIn,
+      },
+    })
+
+  // Contributor Pass Check
+  const { data: hasContributorPass, isLoading: contributorLoading } =
+    useReadContract({
+      address: contributorPassAddress,
+      abi: contributorPassAbi,
+      functionName: "hasMinted",
+      args: address ? [address] : undefined,
+      query: {
+        enabled: !!address && isConnected && isSignedIn,
+      },
+    })
+
+  // Fetch individual referrals based on referral count
+  const fetchAllReferrals = useCallback(async () => {
+    if (!address || !referralCount || referralCount === BigInt(0)) {
+      setReferralsList([])
+      return
+    }
+
+    setFetchingReferrals(true)
+    try {
+      const { viemPublicClient } = await import("@/lib/viemPublicClient")
+      const count = Number(referralCount)
+
+      // Fetch all referrals concurrently
+      const referralPromises = Array.from({ length: count }, (_, index) =>
+        viemPublicClient.readContract({
+          address: nexusExplorerAddress,
+          abi: nexusExplorerAbi,
+          functionName: "referrals",
+          args: [address, BigInt(index)],
+        })
+      )
+
+      const results = await Promise.all(referralPromises)
+      setReferralsList(results as string[])
+    } catch (error) {
+      console.error("Error fetching referrals:", error)
+      setReferralsList([])
+    } finally {
+      setFetchingReferrals(false)
+    }
+  }, [address, referralCount])
+
   const fetchUserProfile = useCallback(async () => {
     if (isSignedIn && address) {
       setUserProfileLoading(true)
@@ -120,6 +188,11 @@ function DashboardContent() {
       refetchExplorerBadge()
     }
   }, [isSignedIn, refetchExplorerBadge])
+
+  useEffect(() => {
+    if (!address || !referralCount) return
+    fetchAllReferrals()
+  }, [address, referralCount, fetchAllReferrals])
   const handleEditProfileInputChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -170,13 +243,27 @@ function DashboardContent() {
       setIsUpdatingProfile(false)
     }
   }
+
+  const handleCopy = () => {
+    const referralLink = `${window.location.origin}/veki?ref=${address}`
+    navigator.clipboard.writeText(referralLink)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
   }
 
   // Main content loading state
-  if (userProfileLoading || explorerLoading) {
+  if (
+    userProfileLoading ||
+    explorerLoading ||
+    contributorLoading ||
+    referralCountLoading ||
+    fetchingReferrals
+  ) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="animate-spin text-primary" size={48} />
@@ -376,16 +463,13 @@ function DashboardContent() {
             className="p-6 bg-card rounded-xl shadow-lg flex flex-col justify-between border border-border"
           >
             <div>
-              <div className="flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-6">
-                <Image
-                  src="/explorer badge.png"
-                  alt="Explorer Badge"
-                  width={48}
-                  height={48}
-                  className="rounded-md"
-                />{" "}
-                {/* Increased size and added rounded-md */}
-              </div>
+              <Image
+                src="/explorer badge.png"
+                alt="Explorer Badge"
+                width={70}
+                height={70}
+                className="rounded-md mb-6"
+              />
               <h3 className="text-xl font-semibold text-foreground mb-2">
                 Nexus Explorer Badge
               </h3>
@@ -417,27 +501,115 @@ function DashboardContent() {
             className="p-6 bg-card rounded-xl shadow-lg flex flex-col justify-between border border-border"
           >
             <div>
-              <div className="flex items-center justify-center w-16 h-16 bg-brand-secondary/10 rounded-full mb-6">
-                <Briefcase className="text-brand-secondary" size={32} />
-              </div>
+              <Image
+                src="/badge 1.png"
+                alt="Contributor Pass"
+                width={64}
+                height={64}
+                className="rounded-md mb-6"
+              />
               <h3 className="text-xl font-semibold text-foreground mb-2">
-                Contributor Program
+                Contributor Pass
               </h3>
               <p className="text-muted-foreground mb-4 text-sm">
                 Elevate your status by contributing to projects and initiatives.
               </p>
             </div>
-            <Button
-              disabled
-              className="w-full mt-auto bg-gray-300 text-gray-500 cursor-not-allowed"
-              title="Learn More (Coming Soon)"
-              onClick={() => {}}
-            >
-              Learn More (Coming Soon)
-            </Button>
+            {hasContributorPass ? (
+              <div className="flex items-center text-green-500 font-medium">
+                <Award className="mr-2 h-5 w-5" />
+                Pass Claimed
+              </div>
+            ) : (
+              <Button
+                onClick={() => router.push("/contributor")}
+                className="w-full mt-auto bg-primary hover:bg-primary/90 text-primary-foreground"
+                title="Claim Contributor Pass"
+              >
+                <ArrowRightCircle className="mr-2 h-5 w-5" /> Claim Contributor
+                Pass
+              </Button>
+            )}
           </motion.div>
         </div>
-      </div>{" "}
+        {/* Referral Section */}
+        <>
+          {hasExplorerBadge && (
+            <motion.div
+              variants={cardVariants}
+              initial="hidden"
+              animate="visible"
+              className="mt-8 p-6 bg-card rounded-xl shadow-lg border border-border"
+            >
+              <div className="flex justify-between items-start">
+                <div>
+                  <h2 className="text-2xl font-semibold text-foreground mb-1">
+                    Refer a Friend
+                  </h2>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Invite others to mint their Explorer Badge and grow the
+                    community.
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={handleCopy}
+                  className="shrink-0"
+                  title="Copy referral link"
+                >
+                  {copied ? (
+                    <Check className="h-4 w-4 mr-2" />
+                  ) : (
+                    <Copy className="h-4 w-4 mr-2" />
+                  )}
+                  {copied ? "Copied!" : "Copy Link"}
+                </Button>
+              </div>
+
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="flex items-center space-x-3">
+                  <Users className="h-6 w-6 text-primary" />
+                  <div>
+                    <Label className="text-xs text-muted-foreground">
+                      Total Referrals
+                    </Label>
+                    <p className="text-lg font-medium text-foreground">
+                      {referralCount?.toString() || "0"}
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">
+                    Referred Addresses
+                  </Label>
+                  {referralsList && referralsList.length > 0 ? (
+                    <div className="space-y-1 text-sm text-foreground max-h-24 overflow-y-auto">
+                      {referralsList.map((refAddress, index) => (
+                        <p
+                          key={index}
+                          className="truncate"
+                          title={refAddress}
+                        >{`${refAddress.substring(
+                          0,
+                          6
+                        )}...${refAddress.substring(
+                          refAddress.length - 4
+                        )}`}</p>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      {fetchingReferrals
+                        ? "Loading referrals..."
+                        : "No referrals yet."}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </>
+      </div>
     </div>
   )
 }
