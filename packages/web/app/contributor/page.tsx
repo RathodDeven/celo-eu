@@ -462,7 +462,7 @@ function ContributorPassContent() {
                 <Button
                   onClick={handleClaimContributorPass}
                   disabled={!canClaim || isClaiming || isConfirming}
-                  className="w-full bg-gradient-to-r from-primary to-secondary text-white hover:opacity-90"
+                  className="w-full bg-gradient-to-r from-brand-primary to-brand-secondary text-white hover:opacity-90 focus:ring-ring shadow-lg"
                   size="lg"
                   title={
                     isClaiming
