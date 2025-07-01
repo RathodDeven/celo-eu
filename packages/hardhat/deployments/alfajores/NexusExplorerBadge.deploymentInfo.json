@@ -6,12 +6,10 @@
   "implementationAddress": "0xC891A15e7eBd28735c643437689b95c6f2e8b00C",
   "adminAddress": "0x0000000000000000000000000000000000000000",
   "deployer": "0xB522133dBd9C8B424429D89d821aeb2a115dB678",
-  "deployedAt": 1751287593098,
+  "deployedAt": 1751364181526,
   "blockNumber": 50332267,
   "transactionHash": "0x509bef1d1cd6476d48b9ce3d4224a13e00a7db15862d399f94399708a05ce23f",
-  "constructorArgs": [
-    "0xB522133dBd9C8B424429D89d821aeb2a115dB678"
-  ],
+  "constructorArgs": ["0xB522133dBd9C8B424429D89d821aeb2a115dB678"],
   "verified": true,
-  "version": "1.0.0"
+  "version": "1.1.0"
 }
