@@ -2,220 +2,59 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { useEffect, useState, useCallback, useMemo } from "react"
-import { useRouter } from "next/navigation"
-import { createPublicClient, createWalletClient, custom, http } from "viem"
-import { currentChain } from "@/providers/RainbowKitWrapper"
-import { nexusExplorerAbi, nexusExplorerAddress } from "@/lib/abi/contracts"
-import emailjs from "@emailjs/browser"
-import { useAccount } from "wagmi"
+import { Github, Linkedin, Mail } from "lucide-react"
 
-export default function ReferralPageAndrea() {
-  const { address, isConnected } = useAccount()
-  const router = useRouter()
-
-  const [minting, setMinting] = useState(false)
-  const [txHash, setTxHash] = useState<string | null>(null)
-  const [hasNFT, setHasNFT] = useState<boolean>(false)
-  const [mintError, setMintError] = useState<string | null>(null)
-  const [emailSent, setEmailSent] = useState(false)
-  const [sendingEmail, setSendingEmail] = useState(false)
-  const [formData, setFormData] = useState({
-    name: "",
-    username: "",
-    email: "",
-  })
-  const publicClient = useMemo(() => {
-    return createPublicClient({
-      chain: currentChain,
-      transport: http(),
-    })
-  }, [])
-
-  const formatAddress = (addr: string) => {
-    return addr.toLowerCase().startsWith("0x")
-      ? (addr as `0x${string}`)
-      : (`0x${addr}` as `0x${string}`)
-  }
-
-  useEffect(() => {
-    const checkOwnership = async () => {
-      if (!address) return
-      try {
-        const tokenIds = (await publicClient.readContract({
-          address: nexusExplorerAddress,
-          abi: nexusExplorerAbi,
-          functionName: "getNFTsByAddress",
-          args: [formatAddress(address)],
-        })) as bigint[]
-
-        setHasNFT(tokenIds.length > 0)
-      } catch (err) {
-        console.error("❌ Error checking NFT ownership:", err)
-      }
-    }
-
-    checkOwnership()
-  }, [address, publicClient])
-
-  const handleMint = useCallback(async () => {
-    setMintError(null)
-
-    if (!address) {
-      setMintError("Wallet not connected.")
-      return
-    }
-
-    try {
-      const provider = (window?.ethereum?.providers?.find(
-        (p: any) => p.isMetaMask
-      ) ?? window?.ethereum) as any
-
-      if (!provider) {
-        setMintError("MetaMask provider not found.")
-        return
-      }
-      const walletClient = createWalletClient({
-        chain: currentChain,
-        transport: custom(provider),
-      })
-
-      setMinting(true)
-      const hash = await walletClient.writeContract({
-        address: nexusExplorerAddress,
-        abi: nexusExplorerAbi,
-        functionName: "mintExplorerBadge",
-        account: formatAddress(address),
-      })
-
-      setTxHash(hash)
-      router.push("/success")
-    } catch (err) {
-      console.error("❌ Minting failed:", err)
-      setMintError("Minting failed. Please check your wallet and try again.")
-    } finally {
-      setMinting(false)
-    }
-  }, [address, router])
-
-  const handleSendEmail = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSendingEmail(true)
-
-    try {
-      await emailjs.send(
-        process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,
-        process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!,
-        formData,
-        process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!
-      )
-      setEmailSent(true)
-    } catch (err: any) {
-      console.error("❌ Email failed:", err?.text || err?.message || err)
-      setEmailSent(false)
-    } finally {
-      setSendingEmail(false)
-    }
-  }
-
+export default function ContributorPageAndrea() {
   return (
-    <div className="flex flex-col justify-center items-center px-4 py-8 max-w-4xl mx-auto">
+    <div className="flex flex-col justify-center items-center px-4 py-12 max-w-3xl mx-auto text-center">
       <Image
         src="/andrea.png"
         alt="Andrea - Ecosystem Builder"
         width={160}
         height={160}
-        className="rounded-full mx-auto mb-4 shadow-lg"
+        className="rounded-full mb-6 shadow-xl border-4 border-brand-primary"
       />
-      <h1 className="text-4xl font-extrabold mb-2">Andrea</h1>
-      <p className="text-gray-600 mb-6 text-lg">
-        Co-Founder @ AXMC | Regenerative Infra Builder
+
+      <h1 className="text-4xl font-bold text-foreground mb-2">Andrea</h1>
+      <p className="text-muted-foreground text-lg mb-6">
+        Co-Founder @ AXMC • Ecosystem Builder • Web3 Infra & Community
       </p>
 
-      {!emailSent ? (
-        <form
-          onSubmit={handleSendEmail}
-          className="flex flex-col gap-4 mt-6 w-full max-w-md"
+      <div className="flex gap-6 mt-4">
+        <Link
+          href="https://github.com/the-axmc"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-foreground hover:text-brand-primary transition"
         >
-          <input
-            type="text"
-            placeholder="Name"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            className="border rounded px-4 py-2"
-            required
-          />
-          <input
-            type="text"
-            placeholder="Username"
-            value={formData.username}
-            onChange={(e) =>
-              setFormData({ ...formData, username: e.target.value })
-            }
-            className="border rounded px-4 py-2"
-            required
-          />
-          <input
-            type="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={(e) =>
-              setFormData({ ...formData, email: e.target.value })
-            }
-            className="border rounded px-4 py-2"
-            required
-          />
-          <button
-            type="submit"
-            className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
-            disabled={sendingEmail}
-          >
-            {sendingEmail ? "Sending..." : "Send"}
-          </button>
-        </form>
-      ) : (
-        <div className="mt-8 text-center">
-          {!isConnected ? (
-            <p className="text-red-600 font-semibold mt-6">
-              Please connect your wallet to mint.
-            </p>
-          ) : hasNFT ? (
-            <p className="text-green-600 font-semibold mt-6">
-              You already own the Explorer Badge
-            </p>
-          ) : (
-            <button
-              onClick={handleMint}
-              disabled={minting}
-              className="rounded bg-green-600 text-white font-semibold px-6 py-2 hover:bg-green-700 disabled:opacity-50"
-            >
-              {minting ? "Minting..." : "Mint Explorer Badge"}
-            </button>
-          )}
-          {txHash && (
-            <p className="text-sm text-green-600 mt-4 break-all">
-              ✅ Transaction sent:{" "}
-              <a
-                href={`https://alfajores.celoscan.io/tx/${txHash}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline"
-              >
-                {txHash}
-              </a>
-            </p>
-          )}
-          {mintError && (
-            <p className="text-sm text-red-600 mt-4">{mintError}</p>
-          )}
-          <Link
-            href="/dashboard"
-            className="text-sm text-blue-600 underline hover:text-blue-800 mt-4 block"
-          >
-            🔍 View your dashboard
-          </Link>
-        </div>
-      )}
+          <Github size={28} />
+        </Link>
+
+        <Link
+          href="https://www.linkedin.com/in/andrea-lopez-de-vicuña/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-foreground hover:text-brand-primary transition"
+        >
+          <Linkedin size={28} />
+        </Link>
+
+                <Link
+          href="https://t.me/andlopvic"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-foreground hover:text-brand-primary transition"
+        >
+          <MessageCircle size={26} />
+        </Link>
+
+        <Link
+          href="mailto:andrea@axmc.xyz"
+          className="text-foreground hover:text-brand-primary transition"
+        >
+          <Mail size={28} />
+        </Link>
+      </div>
     </div>
   )
 }

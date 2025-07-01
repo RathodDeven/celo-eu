@@ -7,22 +7,20 @@ const teamMembers = [
   {
     name: "Andrea",
     image: "/andrea.png",
-    linkedin: "https://www.linkedin.com/in/andrea/",
+    linkedin: "https://www.linkedin.com/in/andrea-lopez-de-vicuña/",
     refPage: "/referral/andrea",
   },
   {
-    name: "Rica",
-    image: "/rica.png",
-    linkedin: "https://www.linkedin.com/in/rica/",
-    refPage: "/referral/rica",
+    name: "Bertrand",
+    image: "/bertrand.png",
+    linkedin: "https://www.linkedin.com/in/bertrand-juglas/",
+    refPage: "/referral/bertrand",
   },
   {
-    name: "Joan",
-    image: "/joan.png",
-    linkedin: "https://www.linkedin.com/in/joan/",
-    refPage: "/referral/joan",
+    name: "Meet the Builders",
+    image: "/ErikValle.jpg",
+    refPage: "https://celoeu.org",
   },
-  // Add more members as needed
 ];
 
 export default function TeamPage() {
@@ -34,6 +32,8 @@ export default function TeamPage() {
           <Link
             key={idx}
             href={member.refPage}
+            target="_blank"
+            rel="noopener noreferrer"
             className="bg-white shadow-lg rounded-lg p-6 flex flex-col items-center text-center border border-gray-200 hover:shadow-xl transition-shadow duration-200"
           >
             <Image
@@ -44,9 +44,20 @@ export default function TeamPage() {
               className="rounded-full mb-4 object-cover"
             />
             <h2 className="text-xl font-semibold mb-2">{member.name}</h2>
-            <p className="text-sm text-blue-600 underline">View LinkedIn</p>
+            <p className="text-sm text-blue-600 underline">View Profile</p>
           </Link>
         ))}
+      </div>
+
+      {/* CTA Section */}
+      <div className="mt-16 text-center">
+        <h3 className="text-2xl font-semibold mb-4">Ready to join the movement?</h3>
+        <Link
+          href="/veki"
+          className="inline-block px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          Join via Veki
+        </Link>
       </div>
     </div>
   );
