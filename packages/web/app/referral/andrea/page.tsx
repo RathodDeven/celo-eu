@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { Github, Linkedin, Mail } from "lucide-react"
+import { Github, Linkedin, Mail, MessageCircle } from "lucide-react"
 
 export default function ContributorPageAndrea() {
   return (
@@ -39,7 +39,7 @@ export default function ContributorPageAndrea() {
           <Linkedin size={28} />
         </Link>
 
-                <Link
+        <Link
           href="https://t.me/andlopvic"
           target="_blank"
           rel="noopener noreferrer"
